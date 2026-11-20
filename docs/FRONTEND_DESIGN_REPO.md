@@ -51,6 +51,8 @@ git push design ui-split:main
 | `src/main.tsx` | `VITE_USE_MOCK === 'true'` 일 때만 `worker.start()` 후 렌더 | 제외 |
 | `.env.development` | `VITE_USE_MOCK=true` 추가 | 제외 |
 | `eslint.config.js` | `globalIgnores` 에 `public/mockServiceWorker.js` 추가 | 제외 |
+| `src/screens/_template/**`, `src/mocks/data/templateList.ts` | **새 화면 견본**(2026-11-20 추가) — 외주가 복사해 새 화면을 만드는 틀. View(표시 전용)·Columns·EditModal·Page(더미 껍데기) 분리 | 제외 |
+| `src/screens/registry.ts`, `screenIds.ts` 의 `// [디자인 레포 전용]` 줄 | 견본 화면 등록 1줄씩 | 3절에서 `sed` 로 삭제 |
 | `README.md`, `CONTRIBUTING.md`, `.github/**`, `scripts/check-paths.mjs`, `.gitattributes`, `.editorconfig` | 외주 안내·규칙·자동 점검 | 제외 |
 
 `package.json` 은 바꾸지 않았다(`msw` 는 이미 devDependencies 에 있음). 운영 빌드(`npm run build`)에는 가짜 API 가 들어가지 않는다(확인함).
@@ -145,10 +147,17 @@ git merge-base --is-ancestor ui-split design/main && echo OK
 `OK` 가 안 나오면 **멈춘다** — 2절 최신화가 안 된 것이다(그대로 진행하면 우리 쪽 최근 변경을 되돌리는 patch 가 만들어진다).
 
 ```bash
-git diff ui-split design/main -- src/components src/screens src/theme src/assets public ':!public/mockServiceWorker.js' > ui.patch
+git diff ui-split design/main -- src/components src/screens src/theme src/assets public ':!public/mockServiceWorker.js' ':!src/screens/_template' > ui.patch
 ```
 ```bash
 git apply --index --directory=nh-atms-common-main/Frontend/nh-atms-web ui.patch
+```
+견본 화면 등록 줄(`[디자인 레포 전용]` 표시)을 지운다:
+```bash
+sed -i '/\[디자인 레포 전용\]/d' nh-atms-common-main/Frontend/nh-atms-web/src/screens/registry.ts nh-atms-common-main/Frontend/nh-atms-web/src/screens/screenIds.ts
+```
+```bash
+git add -A nh-atms-common-main/Frontend/nh-atms-web/src/screens
 ```
 ```bash
 git status
@@ -158,7 +167,8 @@ git status
 |---|---|
 | 들어온 파일이 허용 폴더뿐인가 | `git status` — `src/components`, `src/screens`, `src/theme`, `src/assets`, `public` 아래만 |
 | 로직 줄이 섞이지 않았나 | `git diff --cached -- '*.ts' '*.tsx'` 에서 `@/api`, `@/stores`, `useQuery`, `useMutation`, `onClick` 처리 내용 변경을 눈으로 확인 |
-| 새 화면 Page 가 더미를 쓰는가 | `git grep -n "@/mocks" -- nh-atms-common-main/Frontend/nh-atms-web/src` → 나온 `*Page.tsx` 는 실제 API(`api/endpoints`·`domain` 추가)로 바꾼다. 바꾸기 전엔 빌드가 실패하므로 실수로 배포될 일은 없다 |
+| 견본 줄이 남지 않았나 | `git grep -n "디자인 레포 전용\|_template" -- nh-atms-common-main/Frontend/nh-atms-web/src` → 결과 없어야 함 |
+| 새 화면 Page 가 더미를 쓰는가 | `git grep -n "@/mocks" -- nh-atms-common-main/Frontend/nh-atms-web/src` → 나온 `*Page.tsx` 는 실제 API 로 다시 쓴다: `api/endpoints/<area>.ts`·`domain/<area>.ts` 추가 → Page 에서 `usePagedSearch`·`useMutation` 결과를 View props(`rows`·`total`·`searched`·`loading`·`pagination`·`onSearch`·`onSave`(mutateAsync)·`onDelete`)에 연결. View·Columns·EditModal 은 그대로 둔다(Columns 의 `interface` 는 domain 타입으로 바꿔도 됨). 바꾸기 전엔 타입검사가 실패하므로 실수로 배포될 일은 없다 |
 | 빌드 | `cd nh-atms-common-main/Frontend/nh-atms-web` → `npm run check` → `npm run build` |
 | 화면 | `npm run dev` + 내 PC 백엔드로 바뀐 화면을 직접 확인 |
 
@@ -181,7 +191,7 @@ git commit -m "UI 퍼블리싱 반영 (nh-atms-design main 기준)"
 
 ## 4. 재병합에서 제외되는 것 (요약)
 
-`src/mocks/**`, `public/mockServiceWorker.js`, `src/main.tsx`, `.env*`, `eslint.config.js`, `package*.json`, `vite.config.ts`, `tsconfig*`, `index.html`, `README.md`, `CONTRIBUTING.md`, `.github/**`, `scripts/**`, `.gitattributes`, `.editorconfig` — 3절 diff 의 경로 지정이 이들을 자동으로 뺀다.
+`src/mocks/**`, `public/mockServiceWorker.js`, `src/screens/_template/**`, registry·screenIds 의 `[디자인 레포 전용]` 줄(sed), `src/main.tsx`, `.env*`, `eslint.config.js`, `package*.json`, `vite.config.ts`, `tsconfig*`, `index.html`, `README.md`, `CONTRIBUTING.md`, `.github/**`, `scripts/**`, `.gitattributes`, `.editorconfig` — 3절 diff 의 경로 지정이 이들을 자동으로 뺀다.
 
 ## 5. 검증 기록 (2026-11-20)
 
@@ -190,3 +200,12 @@ git commit -m "UI 퍼블리싱 반영 (nh-atms-design main 기준)"
 - `scripts/check-paths.mjs`: CSS·라벨 변경 → 통과 / `src/api` 수정·부품 삭제·`useQuery` 추가 → 실패(종료코드 1).
 - 재병합 모의 시험: 통합 레포에서 `http.ts` timeout·공지 제목 변경 + 디자인 레포에서 CSS·`DataGrid` 문구·새 부품·더미 추가 → 2절 sync(공통 조상 `c80046e`로 자동 병합) → 3절 재병합 결과 외주 변경 3개 파일만 반영, 우리 변경 유지, `src/mocks`·`main.tsx` 미반영.
 - 콘솔의 `Accessing element.ref was removed in React 19`, 빌드의 `vendor-antd` 1100kB 경고는 기존부터 있던 것(외주 README FAQ 에 기재).
+- (같은 날 추가) 새 화면 견본 `_template`: 브라우저에서 조회 57건·2페이지 이동·등록·삭제 동작, 콘솔 오류 0. 외주가 견본을 복사해 `mcn.mcnStatus` 화면을 만든 모의 시험 → `check-paths` 통과(Page 의 `@/mocks` 는 확인 필요), 3절 재병합 결과 `screens/mcn/` 5개 파일 + registry·screenIds 의 새 화면 1줄씩만 반영, 견본 폴더·견본 줄은 제외, 통합 레포 타입검사 오류는 `McnStatusPage.tsx` 의 `@/mocks` import 1건뿐(우리가 API 로 다시 쓸 곳).
+
+## 6. 왜 MSW 를 유지하나 (2026-11-20 검토)
+
+외주는 MSW 를 만들거나 고치지 않는다(새 화면은 Page 에서 더미를 직접 넘김). 그래도 디자인 레포에 MSW 가 필요한 이유:
+1. 앱 시작 때 `/me`(사용자)·`/menu/my`(메뉴)를 받아야 화면 틀이 열린다 — 없으면 `MeGate` 에서 멈춤.
+2. 공통 부품 일부가 내부에서 API 를 부른다(사무소 선택 `officeField` → `/lookup/offices`, 공통코드 `CodeSelect` → `/lookup/codes`, 사무소·사람·기기 검색 팝업 등). 새 화면이 이 부품을 쓰려면 응답이 있어야 한다.
+3. 기존 9개 화면이 실제처럼 동작해야 외주가 모양·부품 사용법을 참고할 수 있다.
+
