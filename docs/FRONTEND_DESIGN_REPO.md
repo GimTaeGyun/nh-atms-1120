@@ -14,7 +14,7 @@ nh-atms-common-main/Frontend/nh-atms-web/  ──① 분리──▶  저장소 
 | 결정 (2026-11-20 사용자) | 내용 |
 |---|---|
 | 가짜 API | **MSW, 디자인 레포에만** (`src/mocks/`, `main.tsx` 분기, `.env.development` `VITE_USE_MOCK=true`). 통합 레포는 2026-11-11 결정(목 삭제) 그대로 |
-| 외주 수정 범위 | **모양만**: `src/screens/**`·`src/components/**`(JSX·className·라벨, props/export 유지), `src/theme/**`, `*.css`, `src/assets/**`, `public/**`, 더미 `src/mocks/data|handlers/**` |
+| 외주 수정 범위 | **모양만**: `src/screens/**`·`src/components/**`(JSX·className·라벨, props/export 유지), `src/theme/**`, 부품 CSS(**화면 전용 CSS 는 특별한 경우만** — 2026-11-20 사용자 결정, 새 화면 CSS 는 점검에서 '확인 필요' + PR 에 이유), `src/assets/**`, `public/**`, 더미 `src/mocks/data|handlers/**` |
 | 분리·병합 방식 | **`git subtree split`**(공통 조상 유지) + **허용 폴더만 `git diff | git apply --directory`** |
 | 강제 장치 | `scripts/check-paths.mjs` + GitHub Actions `PR 점검`(범위·로직 추가·삭제·타입검사·린트·빌드), PR 템플릿, CODEOWNERS |
 
