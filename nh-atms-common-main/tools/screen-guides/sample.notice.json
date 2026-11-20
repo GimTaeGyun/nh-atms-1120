@@ -1,0 +1,161 @@
+{
+ "order": 6,
+ "screenKey": "sample.notice",
+ "title": "공지사항 + 공통 검색필드",
+ "body": "sample.notice.md",
+ "base": "8582ecc",
+ "groups": {
+  "B": "백엔드",
+  "F": "프론트"
+ },
+ "steps": [
+  {
+   "no": "B1",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+   "desc": "오류 문구 NTC_002(남의 글 수정·삭제)·NTC_003(전체·다른 사무소 공지 등록) 두 줄 + 머리 주석.",
+   "at": "bca7aff"
+  },
+  {
+   "no": "B2",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/notice/dto/NoticeSearchDto.java",
+   "desc": "조회조건에 공지 범위 scope + 서버가 채우는 보이는 범위 restrict·myOfc."
+  },
+  {
+   "no": "B3",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/notice/dto/Notice.java",
+   "desc": "상세 응답에 이전·다음 글(번호·제목) 4필드."
+  },
+  {
+   "no": "B4",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/notice/service/NoticeRules.java",
+   "desc": "공지 범위·권한 규칙 한 곳 — canSee(보이나)·canModify(본인 글)·canWriteTo(쓸 수 있는 사무소), 범위 값."
+  },
+  {
+   "no": "B5",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/notice/mapper/NoticeMapper.java",
+   "desc": "앞뒤 글 selectNeighbors · 삭제 전 본인 글 검사 selectOwners."
+  },
+  {
+   "no": "B6",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/notice/NoticeMapper.xml",
+   "desc": "보이는 공지 조각 visible(전체 공지 + 내 사무소), 범위 조건, 앞뒤 글·작성자 SQL."
+  },
+  {
+   "no": "B7",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/notice/service/NoticeService.java",
+   "desc": "조회 정리(범위·사무소 지정은 관리자만), 상세(볼 수 없으면 404·앞뒤 글), 등록·수정·삭제 권한 검사(403 NTC_002·003)."
+  },
+  {
+   "no": "B8",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/notice/NoticeServiceTest.java",
+   "desc": "(테스트) 관리자·일반 사용자별 범위·본인 글·앞뒤 글 — 26개."
+  },
+  {
+   "no": "F1",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/hooks/useLookup.ts",
+   "desc": "권한코드 목록 훅 useAuthCodes 를 공통 조회 훅으로(권한관리 팝업에 있던 것)."
+  },
+  {
+   "no": "F2",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/search/SearchForm.tsx",
+   "desc": "칸이 자기 필수 규칙(reqSelect 등)을 가지면 기본 필수 문구를 넣지 않음(오류 문구 두 줄 방지).",
+   "at": "3dcf0fc"
+  },
+  {
+   "no": "F3",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/components/search/optionFields.tsx",
+   "desc": "[공통 새 파일] 고정 선택지 optionField · 검색어 keywordField · 검색구분+검색어 keywordTypeFields · 다른 칸 값에 따라 켜기 enabledBy · 값 변환 keywordOf·keywordTypeOf.",
+   "at": "e919054"
+  },
+  {
+   "no": "F4",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/search/lookupFields.tsx",
+   "desc": "[공통] 권한코드 콤보 AuthSelect · authField 추가."
+  },
+  {
+   "no": "F5",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/search/McnSearchModal.tsx",
+   "desc": "[공통] 기번 직접 입력 + 🔍 팝업 McnNoInput · mcnNoField 추가(기기정보 로컬 부품을 올림).",
+   "at": "e919054"
+  },
+  {
+   "no": "F6",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/popup/AuthUserEditModal.tsx",
+   "desc": "권한 칸 = 공통 AuthSelect(로컬 AuthCodeSelect·useAuthCodes·authOptions 삭제).",
+   "at": "e919054"
+  },
+  {
+   "no": "F7",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/sample/AuthMgtParts.tsx",
+   "desc": "검색필터 = 공통 필드(keywordField·authField·optionField), 로컬 AuthSelect 삭제.",
+   "at": "a695175"
+  },
+  {
+   "no": "F8",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/sample/MenuMgtParts.tsx",
+   "desc": "검색필터 = 공통 필드(optionField·ynField·keywordField), 대메뉴 콤보는 공통 OptionSelect 위에."
+  },
+  {
+   "no": "F9",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/sample/McnModelParts.tsx",
+   "desc": "검색어 = 공통 keywordField."
+  },
+  {
+   "no": "F10",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/sample/McnInfoParts.tsx",
+   "desc": "기번 = 공통 mcnNoField(로컬 McnNoSearchInput 삭제).",
+   "at": "e919054"
+  },
+  {
+   "no": "F11",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/domain/notice.ts",
+   "desc": "계약 §3 타입 — NoticeScope, scope, 앞뒤 글 4필드."
+  },
+  {
+   "no": "F12",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/sample/NoticeParts.tsx",
+   "desc": "조회조건(공통 필드만), 파라미터, 권한 판단 canEditNotice·canDeleteNotice·permNote, 범위·N 컬럼, 인쇄 조건."
+  },
+  {
+   "no": "F13",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/popup/NoticeViewModal.tsx",
+   "desc": "상세 팝업 — 범위 표시, 이전·다음 글, 본인 글(관리자는 모두)일 때만 [수정]·[삭제].",
+   "at": "e919054"
+  },
+  {
+   "no": "F14",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/popup/NoticeEditModal.tsx",
+   "desc": "등록·수정 팝업 — 공지 범위 라디오(전체 공지 = 관리자만, 그 밖 내 사무소 고정), 바이트 글자 수.",
+   "at": "e919054"
+  },
+  {
+   "no": "F15",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/sample/NoticePage.tsx",
+   "desc": "화면 본체 — 읽기 전용 안내, 남의 글이면 [수정]·[삭제] 흐림, 상세 앞뒤 이동·삭제.",
+   "at": "a695175"
+  }
+ ]
+}

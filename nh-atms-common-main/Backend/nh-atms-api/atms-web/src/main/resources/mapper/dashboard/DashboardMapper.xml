@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  대시보드(main.dashboard, 홈) — API 계약 §10, 2026-11-16 사용자 결정. 규칙은 DashboardRules(잠정 Q-25·26·27).
+  - 기기 = TB_MCN_INFO(USE_YN='Y') ⋈ TB_SCRT_INST_PST(USE_YN='Y') — 코너 PK(VARCHAR2(3)) 쪽은 가공하지 않고 기기 쪽 RTRIM(LookupMapper 와 같은 규칙)
+  - 관리점 = M.OFC_CODE(= 코너 OFC_CODE, 용역관리점), 관리모점 = NVL(P.BLT_OLD_OFC_CODE, M.OFC_CODE)(코너 소속영업점)
+  - 범위(scope): ofcCode 가 있으면 관리점 또는 관리모점 = 그 사무소, 아니면 region 이 있으면 관리점 또는 관리모점의 JUNG_MOJUM = region
+                 (영업본부 사무소 자신도 포함), 둘 다 없으면 전국
+  - 상태 TB_OP_ATM_STAT · 거래 TB_OP_DEAL_OFCSUM · 장애 TB_EE_MCN_ERR_HIST 는 사진 판독본 기준(docs/DB_TOBE_TABLES.md) — 폐쇄망 개발 DB 확인 필요
+  - JUNG_MOJUM VARCHAR2(6) ↔ OFC_CODE CHAR(6): CAST(… AS CHAR(6)) 로 맞춤. ${} 금지
+-->
+<mapper namespace="kr.co.nh.atms.web.dashboard.mapper.DashboardMapper">
+
+    <select id="selectOfficeOfDept" resultType="kr.co.nh.atms.web.dashboard.dto.DashOffice">
+        SELECT O.OFC_CODE,
+               O.KANM,
+               RTRIM(O.JUNG_MOJUM) AS REGION_CODE
+          FROM TB_OFC_RAW R
+          JOIN TB_OFC_REG_MGT O
+            ON O.OFC_CODE = CAST(R.ONLINE_CODE AS CHAR(6))
+         WHERE R.SAMUSO = #{samuso}
+         FETCH FIRST 1 ROWS ONLY
+    </select>
+
+    <select id="selectOffice" resultType="kr.co.nh.atms.web.dashboard.dto.DashOffice">
+        SELECT O.OFC_CODE,
+               O.KANM,
+               RTRIM(O.JUNG_MOJUM) AS REGION_CODE
+          FROM TB_OFC_REG_MGT O
+         WHERE O.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+    </select>
+
+    <select id="selectRegions" resultType="kr.co.nh.atms.web.dashboard.dto.DashOffice">
+        SELECT P.OFC_CODE,
+               P.KANM,
+               NULL AS REGION_CODE
+          FROM TB_OFC_REG_MGT P
+         WHERE P.OFC_CODE IN (SELECT CAST(M.JUNG_MOJUM AS CHAR(6))
+                                FROM TB_OFC_REG_MGT M
+                               WHERE M.JUNG_MOJUM IS NOT NULL)
+         ORDER BY P.OFC_CODE
+    </select>
+
+    <select id="selectRegionOffices" resultType="kr.co.nh.atms.web.dashboard.dto.DashOffice">
+        SELECT O.OFC_CODE,
+               O.KANM,
+               RTRIM(O.JUNG_MOJUM) AS REGION_CODE
+          FROM TB_OFC_REG_MGT O
+         WHERE O.JUNG_MOJUM = #{region}
+         ORDER BY O.OFC_CODE
+    </select>
+
+    <!-- 기기 범위 조건(별칭 M = 기기, P = 코너) -->
+    <sql id="scope">
+        <choose>
+            <when test="ofcCode != null">
+                AND (M.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+                     OR NVL(P.BLT_OLD_OFC_CODE, M.OFC_CODE) = CAST(#{ofcCode} AS CHAR(6)))
+            </when>
+            <when test="region != null">
+                AND (M.OFC_CODE IN (SELECT G.OFC_CODE FROM TB_OFC_REG_MGT G
+                                     WHERE G.JUNG_MOJUM = #{region} OR G.OFC_CODE = CAST(#{region} AS CHAR(6)))
+                     OR NVL(P.BLT_OLD_OFC_CODE, M.OFC_CODE) IN (SELECT G.OFC_CODE FROM TB_OFC_REG_MGT G
+                                     WHERE G.JUNG_MOJUM = #{region} OR G.OFC_CODE = CAST(#{region} AS CHAR(6))))
+            </when>
+        </choose>
+    </sql>
+
+    <sql id="machineFrom">
+          FROM TB_MCN_INFO M
+          JOIN TB_SCRT_INST_PST P
+            ON P.OFC_CODE = M.OFC_CODE
+           AND P.INST_PST_CODE = RTRIM(M.INST_PST_CODE)
+           AND P.USE_YN = 'Y'
+    </sql>
+
+    <select id="selectMachines" resultType="kr.co.nh.atms.web.dashboard.dto.DashMachine">
+        SELECT M.OFC_CODE AS MGR_OFC_CODE,
+               O1.KANM AS MGR_OFC_NM,
+               NVL(P.BLT_OLD_OFC_CODE, M.OFC_CODE) AS PARENT_OFC_CODE,
+               O2.KANM AS PARENT_OFC_NM,
+               P.INST_PST_NM,
+               M.MCN_NO,
+               NVL(S.SRC_NM, M.SRC) AS SRC_NM,
+        <choose>
+            <when test="vendorCodeType != null">
+               NVL(C.CODE_NM, M.VEND_CODE) AS VEND_NM,
+            </when>
+            <otherwise>
+               M.VEND_CODE AS VEND_NM,
+            </otherwise>
+        </choose>
+               M.KOM_TYPE AS MODEL_NM,
+               NVL(O2.ADDRESS, O1.ADDRESS) AS ADDRESS,
+               CASE WHEN P.IAL_SEV_VEND_OP_YN = 'Y' AND P.IAL_SEV_VEND_CODE IS NOT NULL THEN P.IAL_SEV_VEND_CODE ELSE P.VEND_CODE END AS MGMT_VEND_CODE,
+               T.POWER_OFF,
+               T.USE_STOP,
+               T.ERR_MODE,
+               (SELECT MAX(H.ERR_NM) KEEP (DENSE_RANK LAST ORDER BY H.ERR_OCR_DT, H.ERR_OCR_TIME)
+                  FROM TB_EE_MCN_ERR_HIST H
+                 WHERE H.OFC_CODE = M.OFC_CODE
+                   AND H.MCN_NO = M.MCN_NO) AS STATUS_DETAIL
+        <include refid="machineFrom"/>
+          LEFT JOIN TB_OFC_REG_MGT O1
+                 ON O1.OFC_CODE = M.OFC_CODE
+          LEFT JOIN TB_OFC_REG_MGT O2
+                 ON O2.OFC_CODE = NVL(P.BLT_OLD_OFC_CODE, M.OFC_CODE)
+          LEFT JOIN TB_NMS_SRC S
+                 ON S.SRC = M.SRC
+        <if test="vendorCodeType != null">
+          LEFT JOIN TB_CODE_DTL C
+                 ON C.CODE_SECT = #{vendorCodeType}
+                AND C.CODE = M.VEND_CODE
+        </if>
+          LEFT JOIN TB_OP_ATM_STAT T
+                 ON T.OFC_CODE = M.OFC_CODE
+                AND T.MCN_NO = M.MCN_NO
+         WHERE M.USE_YN = 'Y'
+        <include refid="scope"/>
+         ORDER BY M.OFC_CODE, M.MCN_NO
+    </select>
+
+    <select id="selectDealCount" resultType="long">
+        SELECT NVL(SUM(NVL(D.CASH_PMT_CNT, 0) + NVL(D.CHK_PMT_CNT, 0) + NVL(D.CASH_DEPO_CNT, 0) + NVL(D.CHK_DEPO_CNT, 0)), 0)
+          FROM TB_OP_DEAL_OFCSUM D
+          JOIN TB_MCN_INFO M
+            ON M.OFC_CODE = D.OFC_CODE
+           AND M.MCN_NO = D.MCN_NO
+          JOIN TB_SCRT_INST_PST P
+            ON P.OFC_CODE = M.OFC_CODE
+           AND P.INST_PST_CODE = RTRIM(M.INST_PST_CODE)
+           AND P.USE_YN = 'Y'
+         WHERE D.DEAL_DT = CAST(#{dealDt} AS CHAR(8))
+           AND M.USE_YN = 'Y'
+        <include refid="scope"/>
+    </select>
+
+    <select id="selectHolidays" resultType="string">
+        SELECT HDAY_DT
+          FROM TB_NMS_HDAY
+         WHERE HDAY_DT BETWEEN CAST(#{from} AS CHAR(8)) AND CAST(#{to} AS CHAR(8))
+           AND HDAY_YN = 'Y'
+    </select>
+</mapper>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 사용기록 저장 — TB_SCR_CUD_HIST (CrudLogAspect → CrudLogWriter, 업무와 다른 트랜잭션). 메뉴ID 는 화면키의 메뉴경로로 찾는다(잠정 Q-05) -->
+<mapper namespace="kr.co.nh.atms.web.common.uselog.CrudLogMapper">
+
+    <insert id="insert" parameterType="kr.co.nh.atms.web.common.uselog.CrudLogEntry">
+        INSERT INTO TB_SCR_CUD_HIST (
+            HIST_ID, DEPT_CODE, OFC_CODE, PER_NO, MENU_ID,
+            CUD_TYPE, SUCC_YN, URI, PARAMS, SQL_TEXT,
+            CRT_DTM, CRT_CMENO, LSCHG_DTM, LS_CMENO
+        ) VALUES (
+            #{histId}, #{deptCode,jdbcType=CHAR}, #{ofcCode,jdbcType=CHAR}, #{perNo},
+            (SELECT MIN(M.MENU_ID) FROM TB_SCR_MENU M WHERE M.MENU_PATH = #{menuPath,jdbcType=VARCHAR}),
+            #{cudType}, #{succYn}, #{uri}, #{params}, #{sqlText,jdbcType=CLOB},
+            #{crtDtm}, #{crtCmeno}, #{lschgDtm}, #{lsCmeno}
+        )
+    </insert>
+
+</mapper>

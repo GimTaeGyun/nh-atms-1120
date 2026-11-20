@@ -1,0 +1,187 @@
+{
+ "order": 8,
+ "screenKey": "main.dashboard",
+ "title": "대시보드(홈)",
+ "body": "main.dashboard.md",
+ "base": "bca7aff",
+ "groups": {
+  "B": "백엔드",
+  "F": "프론트",
+  "D": "DB"
+ },
+ "steps": [
+  {
+   "no": "B1",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+   "desc": "오류 문구 DSH_001(범위 밖 사무소) 한 줄 + 머리 주석.",
+   "at": "e919054"
+  },
+  {
+   "no": "B2",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/dto/DashOffice.java",
+   "desc": "사무소 1건(코드·이름·영업본부)."
+  },
+  {
+   "no": "B3",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/dto/DashScope.java",
+   "desc": "레벨·내 사무소·지역 목록·처음 값·콤보 잠금 여부."
+  },
+  {
+   "no": "B4",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/dto/DashMachine.java",
+   "desc": "기기상태정보 1행(관리점·관리모점·코너·기기·상태) + 판정용 원천 값."
+  },
+  {
+   "no": "B5",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/dto/DashSummary.java",
+   "desc": "[조회] 결과(제목·운영 대수·거래량·상태별 대수·기기 목록)."
+  },
+  {
+   "no": "B6",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/service/DashboardRules.java",
+   "desc": "규칙 한 곳 — 권한코드→레벨, 기기상태 판정 순서, 전 영업일, 일평균(잠정 Q-25·26).",
+   "at": "e919054"
+  },
+  {
+   "no": "B7",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/mapper/DashboardMapper.java",
+   "desc": "매퍼 인터페이스 7개."
+  },
+  {
+   "no": "B8",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/dashboard/DashboardMapper.xml",
+   "desc": "SQL — 내 사무소·영업본부·소속 사무소·기기(코너 기준)·거래 건수·휴일, 범위 조각 scope.",
+   "at": "e919054"
+  },
+  {
+   "no": "B9",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/service/DashboardService.java",
+   "desc": "레벨별 범위 검사(403 DSH_001), 요약 계산, 공지 = NoticeService 그대로.",
+   "at": "e919054"
+  },
+  {
+   "no": "B10",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/controller/DashboardController.java",
+   "desc": "API 5개(scope·offices·summary·notices·notice) — 화면 권한 main.dashboard 조회.",
+   "at": "a244248"
+  },
+  {
+   "no": "B11",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/dashboard/DashboardServiceTest.java",
+   "desc": "(테스트) 레벨·상태 순서·전 영업일·레벨별 범위 6개."
+  },
+  {
+   "no": "F1",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/screenIds.ts",
+   "desc": "화면키 main.dashboard 한 줄.",
+   "at": "e919054"
+  },
+  {
+   "no": "F2",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/domain/dashboard.ts",
+   "desc": "계약 §10 타입."
+  },
+  {
+   "no": "F3",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/api/endpoints/dashboard.ts",
+   "desc": "API 5개 + 쿼리 키."
+  },
+  {
+   "no": "F4",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/main/DashboardParts.tsx",
+   "desc": "상태 박스 2×2, 공지 한 줄(- 전체 N 날짜), 기기상태정보 컬럼."
+  },
+  {
+   "no": "F5",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/main/dashboard.css",
+   "desc": "사진 비율 모양(밑줄 콤보·카드·2×2·탭 제목·파란 윗선).",
+   "at": "914fe5f"
+  },
+  {
+   "no": "F6",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/main/DashboardPage.tsx",
+   "desc": "화면 본체 — 레벨별 콤보 잠금, [조회]만, 상태 칸 표 거름, 공지 상세 팝업·공지 탭."
+  },
+  {
+   "no": "F7",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/registry.ts",
+   "desc": "화면 등록 한 줄.",
+   "at": "e919054"
+  },
+  {
+   "no": "F8",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/home/HomePage.tsx",
+   "desc": "홈 = 대시보드(카드 바로가기 삭제)."
+  },
+  {
+   "no": "F9",
+   "kind": "delete",
+   "path": "Frontend/nh-atms-web/src/screens/home/home.css",
+   "desc": "홈 카드 CSS 삭제(쓰는 곳 없음)."
+  },
+  {
+   "no": "D1",
+   "kind": "new",
+   "path": "db/change/dashboard_menu.sql",
+   "desc": "대시보드 메뉴 행(DSB0000·DSB0100·DSB0101 /main/dashboard) + 권한 A·T·L 조회."
+  },
+  {
+   "no": "D2",
+   "kind": "diff",
+   "path": "db/check/01_exists.sql",
+   "desc": "확인 대상에 TB_OP_ATM_STAT·TB_OP_DEAL_OFCSUM·TB_EE_MCN_ERR_HIST.",
+   "at": "e919054"
+  },
+  {
+   "no": "D3",
+   "kind": "diff",
+   "path": "db/check/02_columns.sql",
+   "desc": "〃",
+   "at": "e919054"
+  },
+  {
+   "no": "D4",
+   "kind": "diff",
+   "path": "db/tools/gen_ddl.py",
+   "desc": "TABLES 에 판독본 테이블 3개.",
+   "at": "e919054"
+  },
+  {
+   "no": "D5",
+   "kind": "new",
+   "path": "db/ddl/TB_OP_ATM_STAT.sql",
+   "desc": "(생성물) 참고 DDL — 사진 판독본."
+  },
+  {
+   "no": "D6",
+   "kind": "new",
+   "path": "db/ddl/TB_OP_DEAL_OFCSUM.sql",
+   "desc": "(생성물) 참고 DDL — 사진 판독본."
+  },
+  {
+   "no": "D7",
+   "kind": "new",
+   "path": "db/ddl/TB_EE_MCN_ERR_HIST.sql",
+   "desc": "(생성물) 참고 DDL — 사진 판독본."
+  }
+ ]
+}

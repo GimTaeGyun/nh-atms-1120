@@ -1,0 +1,30 @@
+/* 화면 틀 = 세로 flex. 표(DataGrid·EditableGrid)는 부모가 세로 flex 면 남은 높이를 채운다(grid/useFillHeight.ts, 2026-11-13) */
+.page-frame { display: flex; flex-direction: column; min-height: 100%; }
+.page-frame > *, .page-frame .ant-tabs-tabpane-active > * { flex-shrink: 0; }
+.grid-fill { flex: 1 1 0 !important; min-height: 240px; overflow: hidden; }
+/* 탭 화면(권한관리 등): 탭 → 내용 → 보이는 탭 칸까지 세로 flex 로 이어서 그 안의 표도 남은 높이를 채운다 */
+.page-frame > .ant-tabs { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.page-frame > .ant-tabs > .ant-tabs-content-holder { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.page-frame > .ant-tabs > .ant-tabs-content-holder > .ant-tabs-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; height: auto; }
+.page-frame > .ant-tabs .ant-tabs-tabpane-active { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+/* 마스터·디테일 두 칸(기기모델코드 등)이 화면에 바로 놓이면 남은 높이를 채우고, 각 칸 안의 표도 채운다 */
+.page-frame > .master-detail { flex: 1 1 0; min-height: 320px; grid-template-rows: minmax(0, 1fr); }
+.page-frame > .master-detail > .panel { display: flex; flex-direction: column; min-height: 0; }
+.page-frame > .master-detail > .panel > .panel-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.page-crumb { margin-bottom: 6px; font-size: var(--fs-sm); }
+.page-crumb .ant-breadcrumb-link { color: var(--text-secondary); }
+.page-crumb li:last-child .ant-breadcrumb-link { color: var(--text); }
+.page-crumb .ant-breadcrumb-separator { color: var(--text-muted); margin: 0 6px; }
+.page-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; min-height: 34px; }
+.page-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.page-title .bar { width: 4px; height: 20px; background: var(--primary); border-radius: 2px; flex: none; }
+.page-title h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
+.page-title .sid { font-size: var(--fs-xs); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; font-variant-numeric: tabular-nums; }
+.page-title .fav-btn { all: unset; cursor: pointer; color: var(--text-secondary); font-size: 17px; display: flex; }
+.page-title .fav-btn:hover, .page-title .fav-btn.on { color: var(--nh-gold); }
+.page-subtitle { font-size: var(--fs-sm); color: var(--text-secondary); margin-left: 8px; }
+.page-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.last-updated { font-size: var(--fs-sm); color: var(--text-secondary); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.page-note { font-size: var(--fs-sm); color: var(--danger); margin: -4px 0 8px; }
+.page-note.info { color: var(--text-secondary); }
+.view-toggle .ant-segmented-item-selected { font-weight: 600; }

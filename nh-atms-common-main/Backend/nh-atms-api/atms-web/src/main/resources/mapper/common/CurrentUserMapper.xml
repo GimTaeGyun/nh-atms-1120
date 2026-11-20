@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 현재 사용자(고정 개인번호) — TB_INSA · TB_SCR_AUTH · TB_OFC_REG_MGT (설계 §5.3, API 계약 §1) -->
+<mapper namespace="kr.co.nh.atms.web.common.auth.CurrentUserMapper">
+
+    <!-- TB_INSA.PER_NO VARCHAR2(9) -->
+    <select id="selectInsa" resultType="kr.co.nh.atms.web.common.auth.InsaRow">
+        SELECT PER_NO,
+               NAME,
+               SAMUSO,
+               SAMUSO_NAME
+          FROM TB_INSA
+         WHERE PER_NO = #{perNo}
+    </select>
+
+    <!-- TB_SCR_AUTH: DEPT_CODE·OFC_CODE CHAR(6), APV_STS CHAR(2), DUE_DATE CHAR(14) → RTRIM. 채택 규칙은 CurrentUserLoader.pickAuth(잠정) -->
+    <select id="selectAuths" resultType="kr.co.nh.atms.web.common.auth.ScrAuthRow">
+        SELECT RTRIM(DEPT_CODE) AS DEPT_CODE,
+               RTRIM(OFC_CODE)  AS OFC_CODE,
+               AUTH,
+               RTRIM(APV_STS)   AS APV_STS,
+               RTRIM(DUE_DATE)  AS DUE_DATE
+          FROM TB_SCR_AUTH
+         WHERE PER_NO = #{perNo}
+    </select>
+
+    <!--
+      부서권한(2026-11-11 사용자 결정): TB_SCR_AUTH 에서 PER_NO = '1' 인 행. 사람 → TB_INSA.SAMUSO = TB_OFC_RAW.SAMUSO,
+      그 TB_OFC_RAW 행의 SAMUSO(부서코드) = DEPT_CODE 이고 ONLINE_CODE(사무소코드) = OFC_CODE 인 부서권한 행이 그 사람 것.
+      TB_OFC_RAW 코드는 VARCHAR2(6), TB_SCR_AUTH 는 CHAR(6) → 바인드 쪽(R)을 CAST(21지침 §5, 인덱스 쪽 A 는 가공 안 함)
+    -->
+    <select id="selectDeptAuths" resultType="kr.co.nh.atms.web.common.auth.ScrAuthRow">
+        SELECT RTRIM(A.DEPT_CODE) AS DEPT_CODE,
+               RTRIM(A.OFC_CODE)  AS OFC_CODE,
+               A.AUTH,
+               RTRIM(A.APV_STS)   AS APV_STS,
+               RTRIM(A.DUE_DATE)  AS DUE_DATE
+          FROM TB_INSA I
+          JOIN TB_OFC_RAW R ON R.SAMUSO = I.SAMUSO
+          JOIN TB_SCR_AUTH A
+            ON A.DEPT_CODE = CAST(R.SAMUSO AS CHAR(6))
+           AND A.OFC_CODE = CAST(R.ONLINE_CODE AS CHAR(6))
+         WHERE I.PER_NO = #{perNo}
+           AND A.PER_NO = '1'
+    </select>
+
+    <!-- TB_OFC_REG_MGT.OFC_CODE CHAR(6) ← 바인드 값은 CAST (21지침 §5) -->
+    <select id="selectKanm" resultType="string">
+        SELECT KANM
+          FROM TB_OFC_REG_MGT
+         WHERE OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+    </select>
+
+</mapper>

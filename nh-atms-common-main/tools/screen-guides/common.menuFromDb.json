@@ -1,0 +1,138 @@
+{
+ "order": 3,
+ "screenKey": "(공통) 메뉴 DB 전환",
+ "title": "메뉴 DB 전환",
+ "body": "common.menuFromDb.md",
+ "base": "20ac5e1",
+ "groups": {
+  "F": "프론트"
+ },
+ "steps": [
+  {
+   "no": "F1",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/stores/useNavStore.ts",
+   "desc": "메뉴 상태 — API 응답만(내장 메뉴·menuSource 삭제), 상단 칸 키 = 대메뉴ID(activeTop·HOME_TOP), topNodes·nodeOfTop·flattenScreens(topId)."
+  },
+  {
+   "no": "F2",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/components/layout/topItems.ts",
+   "desc": "상단 메뉴·아이콘 줄 칸 = '홈' + DB 대메뉴(같은 기본 아이콘)."
+  },
+  {
+   "no": "F3",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/layout/AppHeader.tsx",
+   "desc": "상단 메뉴를 topItems 로.",
+   "at": "37a1a5a"
+  },
+  {
+   "no": "F4",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/layout/IconRail.tsx",
+   "desc": "아이콘 줄을 topItems 로.",
+   "at": "3dcf0fc"
+  },
+  {
+   "no": "F5",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/layout/SidePanel.tsx",
+   "desc": "대메뉴ID 로 패널, '준비 중' 칸, 보이는 메뉴 없음 안내 + [다시 시도].",
+   "at": "37a1a5a"
+  },
+  {
+   "no": "F6",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/layout/AppShell.tsx",
+   "desc": "activeTop·flyoutTop 으로 패널 연결."
+  },
+  {
+   "no": "F7",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/layout/SettingsDrawer.tsx",
+   "desc": "'메뉴 내장 시드' 표시 삭제."
+  },
+  {
+   "no": "F8",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/layout/GlobalSearch.tsx",
+   "desc": "검색 결과 경로·아이콘을 DB 메뉴로.",
+   "at": "3dcf0fc"
+  },
+  {
+   "no": "F9",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/page/PageFrame.tsx",
+   "desc": "브레드크럼·제목을 DB 메뉴(대 > 중 > 메뉴명)로.",
+   "at": "a695175"
+  },
+  {
+   "no": "F10",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/navigation.ts",
+   "desc": "탭 제목 = DB 메뉴명, 상단 강조 = 그 화면의 대메뉴."
+  },
+  {
+   "no": "F11",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/layout/ScreenHost.tsx",
+   "desc": "URL 로 연 화면도 같은 규칙(탭 제목·상단 강조)."
+  },
+  {
+   "no": "F12",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/registry.ts",
+   "desc": "def(화면키, 이름, 화면 파일) — 대분류·그룹 칸 삭제, parseScreenPath 가 화면키만.",
+   "at": "bca7aff"
+  },
+  {
+   "no": "F13",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/types/screen.ts",
+   "desc": "L1Slug·L1Def 삭제, ScreenDef 의 slug·group 삭제."
+  },
+  {
+   "no": "F14",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/config/env.ts",
+   "desc": "menuSource(VITE_MENU_SOURCE) 삭제."
+  },
+  {
+   "no": "F15",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/vite-env.d.ts",
+   "desc": "VITE_MENU_SOURCE 타입 삭제."
+  },
+  {
+   "no": "F16",
+   "kind": "delete",
+   "path": "Frontend/nh-atms-web/src/screens/l1.ts",
+   "desc": "대분류 표(상단 메뉴 하드코딩) — DB 대메뉴로 대체."
+  },
+  {
+   "no": "F17",
+   "kind": "delete",
+   "path": "Frontend/nh-atms-web/src/screens/menuSeed.ts",
+   "desc": "내장 메뉴(견본 메뉴 하드코딩) — DB 메뉴로 대체."
+  },
+  {
+   "no": "F18",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/.env.development",
+   "desc": "VITE_MENU_SOURCE 줄 삭제."
+  },
+  {
+   "no": "F19",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/.env.production",
+   "desc": "VITE_MENU_SOURCE 줄 삭제."
+  },
+  {
+   "no": "F20",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/.env.example",
+   "desc": "VITE_MENU_SOURCE 설명을 '메뉴는 서버 응답으로만' 으로."
+  }
+ ]
+}

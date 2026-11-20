@@ -1,0 +1,66 @@
+{
+ "order": 4,
+ "screenKey": "(공통) UI 가독성 개선",
+ "title": "UI 가독성 개선",
+ "body": "common.uiReadability.md",
+ "base": "37a1a5a",
+ "groups": {
+  "F": "프론트"
+ },
+ "steps": [
+  {
+   "no": "F1",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/theme/tokens.ts",
+   "desc": "색·글자 크기 원천 — 기본 14px·보조 13px, 보조·흐린 글자색과 테두리를 진하게.",
+   "at": "3dcf0fc"
+  },
+  {
+   "no": "F2",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/theme/antdTheme.ts",
+   "desc": "antd 테마 — 컴팩트 모드 해제(입력·버튼 글자 12→14px), 높이 32px, 흐림 글자 진하게, 탭·팝업 제목 크기.",
+   "at": "3dcf0fc"
+  },
+  {
+   "no": "F3",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/theme/global.css",
+   "desc": "CSS 변수(--fs 14·--fs-sm 13·--fs-xs 12), 조회조건 '• 라벨' 모양(배경 칸 없음)·조회 버튼 넓게, 표 머리글 진하게·세로줄, 작은 글자 정리.",
+   "at": "1ba1d65"
+  },
+  {
+   "no": "F4",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/layout/layout.css",
+   "desc": "헤더(시스템명 15px)·상단 메뉴(15px, 선택 = 남색 굵게 + 밑줄)·헤더 즐겨찾기 상자·좌측 메뉴(폴더 진한 14px, 메뉴 14px)·탭바(14px, 선택 위쪽 줄).",
+   "at": "1ba1d65"
+  },
+  {
+   "no": "F5",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/page/page.css",
+   "desc": "브레드크럼 13px·진하게, 화면 제목 20px, 부제·마지막 업데이트 13px.",
+   "at": "1ba1d65"
+  },
+  {
+   "no": "F6",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/grid/gridExt.css",
+   "desc": "편집 표 오류 글자·상태 패널 글자 크기.",
+   "at": "3dcf0fc"
+  },
+  {
+   "no": "F7",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/layout/AppHeader.tsx",
+   "desc": "헤더 오른쪽 = 화면 검색 + ☆ 즐겨찾기(현업 화면처럼). 이름·소속은 좌측 아래 사용자 카드에만."
+  },
+  {
+   "no": "F8",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/components/layout/SidePanel.tsx",
+   "desc": "좌측 맨 위 즐겨찾기 상자 삭제(헤더로 옮김)."
+  }
+ ]
+}

@@ -1,0 +1,175 @@
+{
+ "order": 2,
+ "screenKey": "sample.menuMgt",
+ "title": "메뉴관리",
+ "body": "sample.menuMgt.md",
+ "base": "b4963e3",
+ "groups": {
+  "B": "백엔드",
+  "F": "프론트",
+  "D": "DB 이관 SQL"
+ },
+ "steps": [
+  {
+   "no": "B1",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+   "desc": "오류 문구 MNU_004~009 추가(메뉴 없음·접두어 겹침·번호 다 씀·상위 모양·경로 겹침·동시 등록), 머리 주석에 출처.",
+   "at": "8582ecc"
+  },
+  {
+   "no": "B2",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/dto/MenuMgtRow.java",
+   "desc": "메뉴 1행(목록·등록·수정 응답 + 등록·수정 SQL 파라미터). 레벨·하위 수·상위 경로는 서버가 붙임, 감사 4컬럼 자동."
+  },
+  {
+   "no": "B3",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/dto/MenuMgtSearchDto.java",
+   "desc": "조회조건 대메뉴·레벨·사용·검색어(페이징 없음)."
+  },
+  {
+   "no": "B4",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/dto/MenuMgtSave.java",
+   "desc": "등록·수정 본문(등록 = 레벨 + 상위/접두어, 수정 = 이름·경로·순서·사용만)."
+  },
+  {
+   "no": "B5",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/dto/MenuMgtDeleteRequest.java",
+   "desc": "다건 삭제 본문 {menuIds}."
+  },
+  {
+   "no": "B6",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/dto/MenuMgtDeleteResult.java",
+   "desc": "다건 삭제 응답 {count, authCount}."
+  },
+  {
+   "no": "B7",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/service/MenuMgtRules.java",
+   "desc": "메뉴ID 규칙 한 곳 — 모양(대·중·소), 레벨 판단, 대메뉴ID, 다음 번호 MAX+1(99 넘침 MNU_006, 상위 모양 MNU_007), 경로 모양."
+  },
+  {
+   "no": "B8",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/mapper/MenuMgtMapper.java",
+   "desc": "매퍼 인터페이스(전체·1건·하위ID·접두어 수·경로 수·넣기·고치기·권한행 지우기·메뉴 지우기)."
+  },
+  {
+   "no": "B9",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/menumgt/MenuMgtMapper.xml",
+   "desc": "SQL — TB_SCR_MENU 읽기·쓰기, TB_SCR_AUTH_MENU 지우기."
+  },
+  {
+   "no": "B10",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/service/MenuMgtService.java",
+   "desc": "목록(트리 순서·레벨·거르기), 등록(레벨별 채번·검사), 수정, 삭제(하위 검사 → 권한행 → 메뉴)."
+  },
+  {
+   "no": "B11",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/controller/MenuMgtController.java",
+   "desc": "API 4개(목록 QRY · 등록 REG · 수정 UPD · 삭제 DEL).",
+   "at": "a244248"
+  },
+  {
+   "no": "B12",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/menumgt/MenuMgtRulesTest.java",
+   "desc": "(테스트) 메뉴ID 규칙 — 레벨 판단, MAX+1, 99 넘침, 상위 모양, 경로 모양."
+  },
+  {
+   "no": "B13",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/menumgt/MenuMgtServiceTest.java",
+   "desc": "(테스트) 목록 트리 순서·거르기, 등록 채번·오류, 수정 범위, 삭제 하위 검사·권한행 함께."
+  },
+  {
+   "no": "F1",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/config/messages.ts",
+   "desc": "입력 검사 문구 VMSG.menuPath 한 줄.",
+   "at": "e919054"
+  },
+  {
+   "no": "F2",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/screenIds.ts",
+   "desc": "화면키 sample.menuMgt · 팝업키 popup.menuEdit.",
+   "at": "bca7aff"
+  },
+  {
+   "no": "F3",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/domain/menuMgt.ts",
+   "desc": "계약 §9 타입(MenuLevel·MenuMgtSearch·MenuMgtRow·MenuMgtSave·삭제 요청/응답)."
+  },
+  {
+   "no": "F4",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/api/endpoints/menuMgt.ts",
+   "desc": "API 호출 4개 + 쿼리 키."
+  },
+  {
+   "no": "F5",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/MenuMgtColumns.tsx",
+   "desc": "길이 상한, 레벨 태그, 메뉴ID 조각 표시(SYS·03·12), 목록 컬럼.",
+   "at": "89de5f8"
+  },
+  {
+   "no": "F6",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/MenuMgtParts.tsx",
+   "desc": "메뉴 전체 읽기·쓰기 뒤 처리, 메뉴ID 미리보기(서버와 같은 규칙), 대·중메뉴 콤보 옵션(번호·하위 수·검색), 조회조건.",
+   "at": "8582ecc"
+  },
+  {
+   "no": "F7",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/popup/MenuEditModal.tsx",
+   "desc": "등록·수정 팝업 — 레벨 → 대메뉴 → 중메뉴 연쇄 콤보, 메뉴ID 미리보기, 경로·순서 자동 채움.",
+   "at": "e919054"
+  },
+  {
+   "no": "F8",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/MenuMgtPage.tsx",
+   "desc": "화면 본체 — 조회조건 → 트리 순서 목록 → 등록·수정 팝업, 삭제, 엑셀.",
+   "at": "20ac5e1"
+  },
+  {
+   "no": "F9",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/registry.ts",
+   "desc": "화면 등록 한 줄.",
+   "at": "20ac5e1"
+  },
+  {
+   "no": "F10",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/menuSeed.ts",
+   "desc": "내장 메뉴를 3단계(SMP0000 → SMP0100 → SMP0101~)로 + 메뉴관리 한 줄.",
+   "at": "20ac5e1"
+  },
+  {
+   "no": "F11",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/home/HomePage.tsx",
+   "desc": "홈 카드(아이콘 import + 카드 한 줄 + 주석).",
+   "at": "bca7aff"
+  },
+  {
+   "no": "D1",
+   "kind": "new",
+   "path": "db/change/menu_three_level.sql",
+   "desc": "이관 SQL — 견본 메뉴 SMP000·SMP001~ → SMP0000·SMP0100·SMP0101~, 권한행 메뉴ID 변경, 메뉴관리 메뉴 행."
+  }
+ ]
+}

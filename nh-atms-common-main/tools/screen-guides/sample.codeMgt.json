@@ -1,0 +1,397 @@
+{
+ "order": 9,
+ "screenKey": "sample.codeMgt",
+ "title": "코드관리 + 공통 확인·입력 팝업 통일",
+ "body": "sample.codeMgt.md",
+ "base": "e919054",
+ "groups": {
+  "B": "백엔드",
+  "F": "프론트",
+  "D": "DB"
+ },
+ "steps": [
+  {
+   "no": "B1",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+   "desc": "오류 문구 CDM_001~005 다섯 줄 + 머리 주석.",
+   "at": "a244248"
+  },
+  {
+   "no": "B2",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/dto/CodeMaster.java",
+   "desc": "코드구분 1행(TB_CODE_MASTER + 상세 건수, 감사 4컬럼 상속)."
+  },
+  {
+   "no": "B3",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/dto/CodeDetail.java",
+   "desc": "상세코드 1행(TB_CODE_DTL)."
+  },
+  {
+   "no": "B4",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/dto/CodeMasterSave.java",
+   "desc": "코드구분 등록·수정 본문."
+  },
+  {
+   "no": "B5",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/dto/CodeDetailSave.java",
+   "desc": "상세코드 등록·수정 본문."
+  },
+  {
+   "no": "B6",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/dto/CodeMgtSearchDto.java",
+   "desc": "목록 조회조건(검색어·사용여부)."
+  },
+  {
+   "no": "B7",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/dto/CodeMgtDeleteRequest.java",
+   "desc": "다건 삭제 본문 {keys}."
+  },
+  {
+   "no": "B8",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/dto/CodeMgtDeleteResult.java",
+   "desc": "삭제 건수 {count}."
+  },
+  {
+   "no": "B9",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/mapper/CodeMgtMapper.java",
+   "desc": "매퍼 인터페이스(위 DTO 를 씀)."
+  },
+  {
+   "no": "B10",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/codemgt/CodeMgtMapper.xml",
+   "desc": "SQL — 목록·1건·등록·수정·삭제, 상세 남은 코드구분 찾기."
+  },
+  {
+   "no": "B11",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/service/CodeMgtRules.java",
+   "desc": "규칙 한 곳 — 길이(정본 컬럼 크기)·키 모양·데이터4 범위(잠정 Q-28)."
+  },
+  {
+   "no": "B12",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/service/CodeMgtService.java",
+   "desc": "검사·없음 404·겹침 400·상세 남으면 삭제 막힘(CDM_002)."
+  },
+  {
+   "no": "B13",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/controller/CodeMgtController.java",
+   "desc": "API 10개 — 메서드마다 @RequireMenuAuth(sample.codeMgt).",
+   "at": "a244248"
+  },
+  {
+   "no": "B14",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/codemgt/CodeMgtServiceTest.java",
+   "desc": "(테스트) 7개 — 검사·겹침·삭제 막힘·상세 등록/수정/삭제."
+  },
+  {
+   "no": "B15",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/lookup/LookupMapper.xml",
+   "desc": "공통코드 콤보·기기사 콤보: TB_CO_CODE → TB_CODE_DTL ⋈ TB_CODE_MASTER(사용여부), 코드 순(잠정 Q-29)."
+  },
+  {
+   "no": "B16",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/lookup/mapper/LookupMapper.java",
+   "desc": "주석만(TB_CODE_DTL)."
+  },
+  {
+   "no": "B17",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/lookup/service/LookupRules.java",
+   "desc": "주석만(설정값 = TB_CODE_DTL 의 CODE_SECT)."
+  },
+  {
+   "no": "B18",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/authmgt/AuthMgtMapper.xml",
+   "desc": "권한명·권한코드 목록: TB_CODE_DTL."
+  },
+  {
+   "no": "B19",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/authmgt/service/AuthMgtService.java",
+   "desc": "주석만(잠정 Q-20)."
+  },
+  {
+   "no": "B20",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/mcninfo/McnInfoMapper.xml",
+   "desc": "기기사명 조인: TB_CODE_DTL."
+  },
+  {
+   "no": "B21",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/mcnmodel/McnModelMapper.xml",
+   "desc": "기기사명 조인: TB_CODE_DTL."
+  },
+  {
+   "no": "B22",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/dashboard/DashboardMapper.xml",
+   "desc": "관리업체명 조인: TB_CODE_DTL."
+  },
+  {
+   "no": "B23",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/service/DashboardRules.java",
+   "desc": "중복 정리 — 날짜 포맷은 공통 Dates.YMD."
+  },
+  {
+   "no": "B24",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/service/DashboardService.java",
+   "desc": "중복 정리 — 일시 포맷은 공통 Dates.DT14."
+  },
+  {
+   "no": "F1",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/utils/object.ts",
+   "desc": "trimOrUndef 추가(앞뒤 공백 떼고 비면 undefined) — 여러 화면이 따로 쓰던 것."
+  },
+  {
+   "no": "F2",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/utils/format.ts",
+   "desc": "fmtPerson 추가(이름 (개인번호)) — 공지 팝업 로컬 함수를 공통으로."
+  },
+  {
+   "no": "F3",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/config/messages.ts",
+   "desc": "VMSG.noSpaceKey 추가, CMSG 머리 주석(확인 팝업은 useConfirm 하나)."
+  },
+  {
+   "no": "F4",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/components/feedback/useConfirm.tsx",
+   "desc": "공통 확인 팝업 — 가운데, [취소][동작 이름], 삭제 = 빨강·처음 포커스 [취소]."
+  },
+  {
+   "no": "F5",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/feedback/index.ts",
+   "desc": "useConfirm 내보내기."
+  },
+  {
+   "no": "F6",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/auth/ActionBar.tsx",
+   "desc": "confirm 버튼 = 말풍선 Popconfirm 대신 useConfirm."
+  },
+  {
+   "no": "F7",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/components/display/FormModal.tsx",
+   "desc": "입력 팝업 틀 3종: FormModal · FormLoadGate · FormModalFooter."
+  },
+  {
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/display/StatusTag.tsx",
+   "desc": "UseYnTag 추가 — 사용 초록·미사용 주황 태그(2026-11-17).",
+   "no": "F8"
+  },
+  {
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/grid/columns.tsx",
+   "desc": "usedCol 추가 — 사용여부 표 칸(태그, 엑셀은 사용/미사용 글자).",
+   "no": "F9"
+  },
+  {
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/sample/MenuMgtColumns.tsx",
+   "desc": "사용 칸 = 공통 usedCol(화면 로컬 태그 코드 삭제).",
+   "no": "F10"
+  },
+  {
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/sample/McnInfoColumns.tsx",
+   "desc": "사용여부 칸 = 공통 usedCol(아이콘 → 사용/미사용 태그).",
+   "no": "F11"
+  },
+  {
+   "no": "F12",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/grid/MasterDetailGrids.tsx",
+   "desc": "columns(좌우 비율) · selected/onSelect(선택을 바깥에서) 추가."
+  },
+  {
+   "no": "F13",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/forms/FileAttachList.tsx",
+   "desc": "첨부 삭제 확인 = useConfirm."
+  },
+  {
+   "no": "F14",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/optionFields.tsx",
+   "desc": "keywordOf = trimOrUndef.",
+   "at": "a244248"
+  },
+  {
+   "no": "F15",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/McnSearchModal.tsx",
+   "desc": "검색어 = trimOrUndef."
+  },
+  {
+   "no": "F16",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/PersonSearchModal.tsx",
+   "desc": "검색어 = trimOrUndef."
+  },
+  {
+   "no": "F17",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/popup/NoticeViewModal.tsx",
+   "desc": "삭제 확인 = useConfirm, 작성자 = fmtPerson."
+  },
+  {
+   "no": "F18",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/popup/NoticeEditModal.tsx",
+   "desc": "틀 = FormModal·FormLoadGate·FormModalFooter, 작성자 = fmtPerson."
+  },
+  {
+   "no": "F19",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/popup/AuthUserEditModal.tsx",
+   "desc": "틀 = FormModal·FormLoadGate·FormModalFooter, 메모 = trimOrUndef.",
+   "at": "86e8aa1"
+  },
+  {
+   "no": "F20",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/popup/MenuEditModal.tsx",
+   "desc": "틀 = FormModal·FormModalFooter."
+  },
+  {
+   "no": "F21",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/sample/McnInfoParts.tsx",
+   "desc": "trimOpt → 공통 trimOrUndef."
+  },
+  {
+   "no": "F22",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/sample/commonModules/AuthMessageTab.tsx",
+   "desc": "공통 모듈 화면 견본: 확인 팝업 시연을 useConfirm 으로."
+  },
+  {
+   "no": "F23",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/screenIds.ts",
+   "desc": "sample.codeMgt + 팝업 키 4개.",
+   "at": "a244248"
+  },
+  {
+   "no": "F24",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/domain/codeMgt.ts",
+   "desc": "계약 §11 타입."
+  },
+  {
+   "no": "F25",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/api/endpoints/codeMgt.ts",
+   "desc": "API 10개 + 쿼리 키."
+  },
+  {
+   "no": "F26",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/CodeMgtColumns.tsx",
+   "desc": "길이 상수·표 컬럼(왼쪽 3칸·오른쪽 데이터1~3)·상세 항목."
+  },
+  {
+   "no": "F27",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/CodeMgtParts.tsx",
+   "desc": "조회조건(검색어·사용여부, 공통 필드만)."
+  },
+  {
+   "no": "F28",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/popup/CodeMgtModals.tsx",
+   "desc": "팝업 4개(코드구분·상세코드 × 상세·입력) — 공통 틀만."
+  },
+  {
+   "no": "F29",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/CodeMgtPage.tsx",
+   "desc": "화면 본체 — MasterDetailGrids 좌우 4:8, 버튼은 ActionBar."
+  },
+  {
+   "no": "F30",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/registry.ts",
+   "desc": "코드관리 화면 등록.",
+   "at": "a244248"
+  },
+  {
+   "no": "D1",
+   "kind": "new",
+   "path": "db/change/code_mgt_menu.sql",
+   "desc": "(DB) 견본 화면 아래 코드관리 메뉴 행(번호 MAX+1)."
+  },
+  {
+   "no": "D2",
+   "kind": "diff",
+   "path": "db/tools/gen_ddl.py",
+   "desc": "(DB 도구) 생성 대상에 TB_CODE_MASTER·TB_CODE_DTL.",
+   "at": "a244248"
+  },
+  {
+   "no": "D3",
+   "kind": "diff",
+   "path": "db/ddl/_source_columns.csv",
+   "desc": "(DB 사본) 판독본 행 26개(CODE_SECT 10자리 정정).",
+   "at": "a244248"
+  },
+  {
+   "no": "D4",
+   "kind": "diff",
+   "path": "db/ddl/_source_entities.csv",
+   "desc": "(DB 사본) 판독본 엔터티 2개.",
+   "at": "a244248"
+  },
+  {
+   "no": "D5",
+   "kind": "new",
+   "path": "db/ddl/TB_CODE_MASTER.sql",
+   "desc": "(생성물) 참고 DDL — 판독본."
+  },
+  {
+   "no": "D6",
+   "kind": "new",
+   "path": "db/ddl/TB_CODE_DTL.sql",
+   "desc": "(생성물) 참고 DDL — 판독본."
+  },
+  {
+   "no": "D7",
+   "kind": "diff",
+   "path": "db/check/01_exists.sql",
+   "desc": "확인 대상 21개.",
+   "at": "a244248"
+  },
+  {
+   "no": "D8",
+   "kind": "diff",
+   "path": "db/check/02_columns.sql",
+   "desc": "확인 대상 21개 + 컬럼 수 주석.",
+   "at": "a244248"
+  }
+ ]
+}

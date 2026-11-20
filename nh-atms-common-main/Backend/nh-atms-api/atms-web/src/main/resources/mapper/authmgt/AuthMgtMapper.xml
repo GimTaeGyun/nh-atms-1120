@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  권한관리(sample.authMgt) — API 계약 §8. AS-IS "시스템 사용권한부여" + 메뉴별 권한
+  TB_SCR_AUTH     : DEPT_CODE CHAR(6), OFC_CODE CHAR(6), PER_NO VARCHAR2(9) PK, AUTH VARCHAR2(2), INS_DATE CHAR(14), INS_ID CHAR(9),
+                    APV_STS CHAR(2), MEMO VARCHAR2(100), DUE_DATE CHAR(14), 감사 4컬럼
+  TB_SCR_AUTH_MENU: AUTH VARCHAR2(2) + MENU_ID VARCHAR2(10) PK, QRY/REG/UPD/DEL/EXE_ROL_YN CHAR(1), USE_YN CHAR(1), 감사 4컬럼
+  TB_SCR_MENU     : MENU_ID VARCHAR2(10) PK, PARENT_MENU_ID, MENU_NM, MENU_TYPE CHAR(1), MENU_PATH, SORT_NO, USE_YN
+  - CHAR 컬럼은 비교 때 CAST(#{v} AS CHAR(n)), 내릴 때 RTRIM (21지침 §5). 사무소명 조인은 양쪽 모두 CHAR(6) 이라 그냥 = (공지 견본과 같음)
+  - 부서권한 = PER_NO '1' 인 행, 개인권한 = 그 밖(2026-11-11 사용자 결정). 부서명 = TB_OFC_RAW.SAMUSO_NAME (TB_OFC_RAW.SAMUSO = DEPT_CODE)
+  - TB_OFC_RAW: SAMUSO 부서코드 VARCHAR2(6) PK, SAMUSO_NAME 부서명, ONLINE_CODE 사무소코드 VARCHAR2(6) — CHAR(6) 와 비교할 때 RTRIM/CAST
+  - 권한명 = 설정 코드구분(authCodeType)이 있을 때만 TB_CODE_DTL.CODE_NM(잠정 Q-20, 2026-11-16 TB_CO_CODE → TB_CODE_DTL), 없으면 NULL
+  - 감사 4컬럼은 AuditInterceptor 가 DTO 에 채운다 — 여기서는 #{crtDtm} 등을 바인딩만 한다(DELETE 는 감사 없음)
+  - ${} 금지
+-->
+<mapper namespace="kr.co.nh.atms.web.authmgt.mapper.AuthMgtMapper">
+
+    <!-- ===================== 사용자 권한 (TB_SCR_AUTH) ===================== -->
+
+    <sql id="userWhere">
+        <where>
+            <if test="s.ofcCode != null">
+                AND A.OFC_CODE = CAST(#{s.ofcCode} AS CHAR(6))
+            </if>
+            <if test="s.auth != null">
+                AND A.AUTH = #{s.auth}
+            </if>
+            <if test="s.apvSts != null">
+                AND A.APV_STS = CAST(#{s.apvSts} AS CHAR(2))
+            </if>
+            <if test='s.kind == "DEPT"'>
+                AND A.PER_NO = '1'
+            </if>
+            <if test='s.kind == "PERSON"'>
+                AND A.PER_NO &lt;&gt; '1'
+            </if>
+            <if test="s.q != null">
+                AND (A.PER_NO LIKE '%' || #{s.q} || '%'
+                     OR I.NAME LIKE '%' || #{s.q} || '%'
+                     OR A.DEPT_CODE LIKE '%' || #{s.q} || '%'
+                     OR D.SAMUSO_NAME LIKE '%' || #{s.q} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <sql id="userColumns">
+        SELECT RTRIM(A.DEPT_CODE) AS DEPT_CODE,
+               D.SAMUSO_NAME      AS DEPT_NM,
+               RTRIM(A.OFC_CODE)  AS OFC_CODE,
+               O.KANM,
+               A.PER_NO,
+               I.NAME,
+               A.AUTH,
+        <choose>
+            <when test="authCodeType != null">
+               C.CODE_NM          AS AUTH_NM,
+            </when>
+            <otherwise>
+               NULL               AS AUTH_NM,
+            </otherwise>
+        </choose>
+               RTRIM(A.APV_STS)   AS APV_STS,
+               A.MEMO,
+               RTRIM(A.DUE_DATE)  AS DUE_DATE,
+               RTRIM(A.INS_DATE)  AS INS_DATE,
+               RTRIM(A.INS_ID)    AS INS_ID,
+               A.CRT_DTM,
+               A.CRT_CMENO,
+               A.LSCHG_DTM,
+               A.LS_CMENO
+          FROM TB_SCR_AUTH A
+          LEFT JOIN TB_INSA I ON I.PER_NO = A.PER_NO
+          LEFT JOIN TB_OFC_REG_MGT O ON O.OFC_CODE = A.OFC_CODE
+          LEFT JOIN TB_OFC_RAW D ON D.SAMUSO = RTRIM(A.DEPT_CODE)
+        <if test="authCodeType != null">
+          LEFT JOIN TB_CODE_DTL C
+                 ON C.CODE_SECT = #{authCodeType}
+                AND C.CODE = A.AUTH
+        </if>
+    </sql>
+
+    <select id="selectUserList" resultType="kr.co.nh.atms.web.authmgt.dto.AuthUser">
+        <include refid="userColumns"/>
+        <include refid="userWhere"/>
+         ORDER BY A.OFC_CODE, A.PER_NO, A.DEPT_CODE
+        OFFSET #{s.offset} ROWS FETCH NEXT #{s.limit} ROWS ONLY
+    </select>
+
+    <select id="countUserList" resultType="long">
+        SELECT COUNT(*)
+          FROM TB_SCR_AUTH A
+          LEFT JOIN TB_INSA I ON I.PER_NO = A.PER_NO
+          LEFT JOIN TB_OFC_RAW D ON D.SAMUSO = RTRIM(A.DEPT_CODE)
+        <include refid="userWhere"/>
+    </select>
+
+    <select id="selectUser" resultType="kr.co.nh.atms.web.authmgt.dto.AuthUser">
+        <include refid="userColumns"/>
+         WHERE A.DEPT_CODE = CAST(#{k.deptCode} AS CHAR(6))
+           AND A.OFC_CODE = CAST(#{k.ofcCode} AS CHAR(6))
+           AND A.PER_NO = #{k.perNo}
+    </select>
+
+    <select id="countUserByKey" parameterType="kr.co.nh.atms.web.authmgt.dto.AuthUserKey" resultType="int">
+        SELECT COUNT(*)
+          FROM TB_SCR_AUTH
+         WHERE DEPT_CODE = CAST(#{deptCode} AS CHAR(6))
+           AND OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+           AND PER_NO = #{perNo}
+    </select>
+
+    <!-- 부서(TB_OFC_RAW) — 부서권한 등록 콤보·개인권한 키 자동 채움 -->
+    <select id="selectDepts" resultType="kr.co.nh.atms.web.authmgt.dto.AuthDept">
+        SELECT SAMUSO,
+               SAMUSO_NAME,
+               ONLINE_CODE
+          FROM TB_OFC_RAW
+        <where>
+            <if test="q != null">
+                SAMUSO LIKE '%' || #{q} || '%'
+                OR SAMUSO_NAME LIKE '%' || #{q} || '%'
+            </if>
+        </where>
+         ORDER BY SAMUSO
+        FETCH FIRST #{limit} ROWS ONLY
+    </select>
+
+    <select id="selectDept" resultType="kr.co.nh.atms.web.authmgt.dto.AuthDept">
+        SELECT SAMUSO,
+               SAMUSO_NAME,
+               ONLINE_CODE
+          FROM TB_OFC_RAW
+         WHERE SAMUSO = #{samuso}
+    </select>
+
+    <select id="selectPersonDept" resultType="kr.co.nh.atms.web.authmgt.dto.AuthDept">
+        SELECT R.SAMUSO,
+               R.SAMUSO_NAME,
+               R.ONLINE_CODE
+          FROM TB_INSA I
+          JOIN TB_OFC_RAW R ON R.SAMUSO = I.SAMUSO
+         WHERE I.PER_NO = #{perNo}
+    </select>
+
+    <select id="countInsa" resultType="int">
+        SELECT COUNT(*)
+          FROM TB_INSA
+         WHERE PER_NO = #{perNo}
+    </select>
+
+    <insert id="insertUser" parameterType="kr.co.nh.atms.web.authmgt.dto.AuthUser">
+        INSERT INTO TB_SCR_AUTH (
+               DEPT_CODE,
+               OFC_CODE,
+               PER_NO,
+               AUTH,
+               INS_DATE,
+               INS_ID,
+               APV_STS,
+               MEMO,
+               DUE_DATE,
+               CRT_DTM,
+               CRT_CMENO,
+               LSCHG_DTM,
+               LS_CMENO
+        ) VALUES (
+               #{deptCode},
+               #{ofcCode},
+               #{perNo},
+               #{auth},
+               #{insDate},
+               #{insId},
+               #{apvSts},
+               #{memo},
+               #{dueDate},
+               #{crtDtm},
+               #{crtCmeno},
+               #{lschgDtm},
+               #{lsCmeno}
+        )
+    </insert>
+
+    <update id="updateUser" parameterType="kr.co.nh.atms.web.authmgt.dto.AuthUser">
+        UPDATE TB_SCR_AUTH
+           SET AUTH = #{auth},
+               APV_STS = #{apvSts},
+               MEMO = #{memo},
+               DUE_DATE = #{dueDate},
+               LSCHG_DTM = #{lschgDtm},
+               LS_CMENO = #{lsCmeno}
+         WHERE DEPT_CODE = CAST(#{deptCode} AS CHAR(6))
+           AND OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+           AND PER_NO = #{perNo}
+    </update>
+
+    <delete id="deleteUsers">
+        DELETE FROM TB_SCR_AUTH
+         WHERE
+        <foreach collection="keys" item="k" open="(" separator=") OR (" close=")">
+               DEPT_CODE = CAST(#{k.deptCode} AS CHAR(6))
+           AND OFC_CODE = CAST(#{k.ofcCode} AS CHAR(6))
+           AND PER_NO = #{k.perNo}
+        </foreach>
+    </delete>
+
+    <!-- ===================== 권한코드 · 메뉴 권한 (TB_SCR_AUTH_MENU) ===================== -->
+
+    <!-- 권한코드 = 사용자 권한·메뉴 권한에 실제로 있는 값(+ 설정 코드구분의 2자 이내 코드). 건수는 상관 서브쿼리 -->
+    <select id="selectAuthCodes" resultType="kr.co.nh.atms.web.authmgt.dto.AuthCode">
+        SELECT X.AUTH,
+        <choose>
+            <when test="authCodeType != null">
+               C.CODE_NM AS AUTH_NM,
+            </when>
+            <otherwise>
+               NULL AS AUTH_NM,
+            </otherwise>
+        </choose>
+               (SELECT COUNT(*) FROM TB_SCR_AUTH U WHERE U.AUTH = X.AUTH)      AS USER_COUNT,
+               (SELECT COUNT(*) FROM TB_SCR_AUTH_MENU M WHERE M.AUTH = X.AUTH) AS MENU_COUNT
+          FROM (SELECT AUTH FROM TB_SCR_AUTH
+                UNION
+                SELECT AUTH FROM TB_SCR_AUTH_MENU
+        <if test="authCodeType != null">
+                UNION
+                SELECT D.CODE FROM TB_CODE_DTL D
+                  JOIN TB_CODE_MASTER W ON W.CODE_SECT = D.CODE_SECT
+                 WHERE D.CODE_SECT = #{authCodeType}
+                   AND NVL(W.USED_YN, 'Y') = 'Y'
+                   AND LENGTH(D.CODE) &lt;= 2
+        </if>
+               ) X
+        <if test="authCodeType != null">
+          LEFT JOIN TB_CODE_DTL C
+                 ON C.CODE_SECT = #{authCodeType}
+                AND C.CODE = X.AUTH
+        </if>
+         WHERE X.AUTH IS NOT NULL
+         ORDER BY X.AUTH
+    </select>
+
+    <!-- 메뉴 전체(사용 안 하는 메뉴 포함) ⟕ 이 권한의 행. 행이 없으면 플래그·사용여부 모두 'N'(화면에 미체크, 2026-11-11 사용자 결정) -->
+    <select id="selectAuthMenus" resultType="kr.co.nh.atms.web.authmgt.dto.AuthMenu">
+        SELECT M.MENU_ID,
+               M.PARENT_MENU_ID,
+               M.MENU_NM,
+               M.MENU_TYPE,
+               M.MENU_PATH,
+               M.SORT_NO,
+               M.USE_YN AS MENU_USE_YN,
+               CASE WHEN AM.MENU_ID IS NULL THEN 'N' ELSE 'Y' END AS MAPPED_YN,
+               NVL(AM.QRY_ROL_YN, 'N') AS QRY_ROL_YN,
+               NVL(AM.REG_ROL_YN, 'N') AS REG_ROL_YN,
+               NVL(AM.UPD_ROL_YN, 'N') AS UPD_ROL_YN,
+               NVL(AM.DEL_ROL_YN, 'N') AS DEL_ROL_YN,
+               NVL(AM.EXE_ROL_YN, 'N') AS EXE_ROL_YN,
+               NVL(AM.USE_YN, 'N')     AS USE_YN,
+               AM.CRT_DTM,
+               AM.CRT_CMENO,
+               AM.LSCHG_DTM,
+               AM.LS_CMENO
+          FROM TB_SCR_MENU M
+          LEFT JOIN TB_SCR_AUTH_MENU AM
+                 ON AM.MENU_ID = M.MENU_ID
+                AND AM.AUTH = #{auth}
+         ORDER BY M.PARENT_MENU_ID, M.SORT_NO, M.MENU_ID
+    </select>
+
+    <select id="countAuthMenu" parameterType="kr.co.nh.atms.web.authmgt.dto.AuthMenu" resultType="int">
+        SELECT COUNT(*)
+          FROM TB_SCR_AUTH_MENU
+         WHERE AUTH = #{auth}
+           AND MENU_ID = #{menuId}
+    </select>
+
+    <select id="countMenu" resultType="int">
+        SELECT COUNT(*)
+          FROM TB_SCR_MENU
+         WHERE MENU_ID = #{menuId}
+    </select>
+
+    <insert id="insertAuthMenu" parameterType="kr.co.nh.atms.web.authmgt.dto.AuthMenu">
+        INSERT INTO TB_SCR_AUTH_MENU (
+               AUTH,
+               MENU_ID,
+               QRY_ROL_YN,
+               REG_ROL_YN,
+               UPD_ROL_YN,
+               DEL_ROL_YN,
+               EXE_ROL_YN,
+               USE_YN,
+               CRT_DTM,
+               CRT_CMENO,
+               LSCHG_DTM,
+               LS_CMENO
+        ) VALUES (
+               #{auth},
+               #{menuId},
+               #{qryRolYn},
+               #{regRolYn},
+               #{updRolYn},
+               #{delRolYn},
+               #{exeRolYn},
+               #{useYn},
+               #{crtDtm},
+               #{crtCmeno},
+               #{lschgDtm},
+               #{lsCmeno}
+        )
+    </insert>
+
+    <update id="updateAuthMenu" parameterType="kr.co.nh.atms.web.authmgt.dto.AuthMenu">
+        UPDATE TB_SCR_AUTH_MENU
+           SET QRY_ROL_YN = #{qryRolYn},
+               REG_ROL_YN = #{regRolYn},
+               UPD_ROL_YN = #{updRolYn},
+               DEL_ROL_YN = #{delRolYn},
+               EXE_ROL_YN = #{exeRolYn},
+               USE_YN = #{useYn},
+               LSCHG_DTM = #{lschgDtm},
+               LS_CMENO = #{lsCmeno}
+         WHERE AUTH = #{auth}
+           AND MENU_ID = #{menuId}
+    </update>
+
+</mapper>

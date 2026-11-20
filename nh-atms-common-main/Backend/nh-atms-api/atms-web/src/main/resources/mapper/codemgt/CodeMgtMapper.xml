@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  코드관리(sample.codeMgt) — API 계약 §11
+  TB_CODE_MASTER: CODE_SECT VARCHAR2(10) PK, CODE_SECT_NM VARCHAR2(100), DESC1~5 VARCHAR2(100), TASK_SECT VARCHAR2(10), PRC_SECT CHAR(1),
+                  USED_YN CHAR(1), 감사 4컬럼   (CODE_SECT 길이: 2026-11-16 사용자 확인 10자리)
+  TB_CODE_DTL   : CODE_SECT VARCHAR2(10) + CODE VARCHAR2(10) PK, CODE_NM VARCHAR2(80), DATA1~3 VARCHAR2(80), DATA4 NUMBER(4), DATA5 CHAR(1), 감사 4컬럼
+  - 상세의 CODE_SECT 로 마스터를 찾는다(물리 FK 없음 — 서비스가 확인, 상세가 남으면 마스터 삭제 금지)
+  - 감사 4컬럼은 AuditInterceptor 가 DTO 에 채운다 — #{crtDtm} 등을 바인딩만 한다(DELETE 는 감사 없음)
+  - CHAR 컬럼은 RTRIM 해서 내린다. ${} 금지
+-->
+<mapper namespace="kr.co.nh.atms.web.codemgt.mapper.CodeMgtMapper">
+
+    <sql id="masterCols">
+        M.CODE_SECT,
+        M.CODE_SECT_NM,
+        M.DESC1,
+        M.DESC2,
+        M.DESC3,
+        M.DESC4,
+        M.DESC5,
+        M.TASK_SECT,
+        RTRIM(M.PRC_SECT) AS PRC_SECT,
+        RTRIM(M.USED_YN) AS USED_YN,
+        (SELECT COUNT(*) FROM TB_CODE_DTL D WHERE D.CODE_SECT = M.CODE_SECT) AS DETAIL_COUNT,
+        M.CRT_DTM,
+        M.CRT_CMENO,
+        M.LSCHG_DTM,
+        M.LS_CMENO
+    </sql>
+
+    <select id="selectMasters" resultType="kr.co.nh.atms.web.codemgt.dto.CodeMaster">
+        SELECT <include refid="masterCols"/>
+          FROM TB_CODE_MASTER M
+        <where>
+            <if test="s.q != null">
+                (UPPER(M.CODE_SECT) LIKE '%' || UPPER(#{s.q}) || '%' OR M.CODE_SECT_NM LIKE '%' || #{s.q} || '%')
+            </if>
+            <if test="s.usedYn != null">
+               AND M.USED_YN = CAST(#{s.usedYn} AS CHAR(1))
+            </if>
+        </where>
+         ORDER BY M.CODE_SECT
+    </select>
+
+    <select id="selectMaster" resultType="kr.co.nh.atms.web.codemgt.dto.CodeMaster">
+        SELECT <include refid="masterCols"/>
+          FROM TB_CODE_MASTER M
+         WHERE M.CODE_SECT = #{codeSect}
+    </select>
+
+    <insert id="insertMaster" parameterType="kr.co.nh.atms.web.codemgt.dto.CodeMaster">
+        INSERT INTO TB_CODE_MASTER (
+               CODE_SECT,
+               CODE_SECT_NM,
+               DESC1,
+               DESC2,
+               DESC3,
+               DESC4,
+               DESC5,
+               TASK_SECT,
+               PRC_SECT,
+               USED_YN,
+               CRT_DTM,
+               CRT_CMENO,
+               LSCHG_DTM,
+               LS_CMENO
+        ) VALUES (
+               #{codeSect},
+               #{codeSectNm},
+               #{desc1},
+               #{desc2},
+               #{desc3},
+               #{desc4},
+               #{desc5},
+               #{taskSect},
+               #{prcSect},
+               #{usedYn},
+               #{crtDtm},
+               #{crtCmeno},
+               #{lschgDtm},
+               #{lsCmeno}
+        )
+    </insert>
+
+    <update id="updateMaster" parameterType="kr.co.nh.atms.web.codemgt.dto.CodeMaster">
+        UPDATE TB_CODE_MASTER
+           SET CODE_SECT_NM = #{codeSectNm},
+               DESC1 = #{desc1},
+               DESC2 = #{desc2},
+               DESC3 = #{desc3},
+               DESC4 = #{desc4},
+               DESC5 = #{desc5},
+               TASK_SECT = #{taskSect},
+               PRC_SECT = #{prcSect},
+               USED_YN = #{usedYn},
+               LSCHG_DTM = #{lschgDtm},
+               LS_CMENO = #{lsCmeno}
+         WHERE CODE_SECT = #{codeSect}
+    </update>
+
+    <select id="selectSectsWithDetails" resultType="string">
+        SELECT DISTINCT CODE_SECT
+          FROM TB_CODE_DTL
+         WHERE CODE_SECT IN
+        <foreach collection="codeSects" item="s" open="(" separator="," close=")">
+               #{s}
+        </foreach>
+         ORDER BY CODE_SECT
+    </select>
+
+    <delete id="deleteMasters">
+        DELETE FROM TB_CODE_MASTER
+         WHERE CODE_SECT IN
+        <foreach collection="codeSects" item="s" open="(" separator="," close=")">
+               #{s}
+        </foreach>
+    </delete>
+
+    <sql id="detailCols">
+        CODE_SECT,
+        CODE,
+        CODE_NM,
+        DATA1,
+        DATA2,
+        DATA3,
+        DATA4,
+        RTRIM(DATA5) AS DATA5,
+        CRT_DTM,
+        CRT_CMENO,
+        LSCHG_DTM,
+        LS_CMENO
+    </sql>
+
+    <select id="selectDetails" resultType="kr.co.nh.atms.web.codemgt.dto.CodeDetail">
+        SELECT <include refid="detailCols"/>
+          FROM TB_CODE_DTL
+         WHERE CODE_SECT = #{codeSect}
+         ORDER BY CODE
+    </select>
+
+    <select id="selectDetail" resultType="kr.co.nh.atms.web.codemgt.dto.CodeDetail">
+        SELECT <include refid="detailCols"/>
+          FROM TB_CODE_DTL
+         WHERE CODE_SECT = #{codeSect}
+           AND CODE = #{code}
+    </select>
+
+    <insert id="insertDetail" parameterType="kr.co.nh.atms.web.codemgt.dto.CodeDetail">
+        INSERT INTO TB_CODE_DTL (
+               CODE_SECT,
+               CODE,
+               CODE_NM,
+               DATA1,
+               DATA2,
+               DATA3,
+               DATA4,
+               DATA5,
+               CRT_DTM,
+               CRT_CMENO,
+               LSCHG_DTM,
+               LS_CMENO
+        ) VALUES (
+               #{codeSect},
+               #{code},
+               #{codeNm},
+               #{data1},
+               #{data2},
+               #{data3},
+               #{data4},
+               #{data5},
+               #{crtDtm},
+               #{crtCmeno},
+               #{lschgDtm},
+               #{lsCmeno}
+        )
+    </insert>
+
+    <update id="updateDetail" parameterType="kr.co.nh.atms.web.codemgt.dto.CodeDetail">
+        UPDATE TB_CODE_DTL
+           SET CODE_NM = #{codeNm},
+               DATA1 = #{data1},
+               DATA2 = #{data2},
+               DATA3 = #{data3},
+               DATA4 = #{data4},
+               DATA5 = #{data5},
+               LSCHG_DTM = #{lschgDtm},
+               LS_CMENO = #{lsCmeno}
+         WHERE CODE_SECT = #{codeSect}
+           AND CODE = #{code}
+    </update>
+
+    <delete id="deleteDetails">
+        DELETE FROM TB_CODE_DTL
+         WHERE CODE_SECT = #{codeSect}
+           AND CODE IN
+        <foreach collection="codes" item="c" open="(" separator="," close=")">
+               #{c}
+        </foreach>
+    </delete>
+
+</mapper>

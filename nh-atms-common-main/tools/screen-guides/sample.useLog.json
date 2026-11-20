@@ -1,0 +1,387 @@
+{
+ "order": 10,
+ "screenKey": "sample.useLog",
+ "title": "사용기록조회 + 사용기록 자동 기록",
+ "body": "sample.useLog.md",
+ "base": "a244248",
+ "groups": {
+  "B": "백엔드",
+  "F": "프론트",
+  "D": "DB"
+ },
+ "steps": [
+  {
+   "no": "B1",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+   "desc": "오류 문구 ULG_001(사용기록 없음·다른 사무소, 404) 한 줄."
+  },
+  {
+   "no": "B2",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/application.yml",
+   "desc": "예전 행위이력 설정 actionlog.* 삭제, atms.uselog.enabled·node(이력번호 서버번호) 추가."
+  },
+  {
+   "no": "B3",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/aspect/ActionLog.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B4",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/aspect/NoActionLog.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B5",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/aspect/UserActionLogAspect.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B6",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/aspect/UserActionLogSupport.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B7",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/dto/UserActionLogDto.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B8",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/mapper/UserActionLogMapper.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B9",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/service/UserActionLogService.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B10",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/actionlog/package-info.java",
+   "desc": "예전 행위이력(T_USER_ACTION_LOG) — 사용기록으로 대체(2026-11-17 사용자 결정)."
+  },
+  {
+   "no": "B11",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/actionlog/UserActionLogMapper.xml",
+   "desc": "예전 행위이력 INSERT SQL."
+  },
+  {
+   "no": "B12",
+   "kind": "delete",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/actionlog/UserActionLogSupportTest.java",
+   "desc": "예전 행위이력 시험."
+  },
+  {
+   "no": "B13",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/ExcludeCrudLog.java",
+   "desc": "기록 제외 표시(메서드·클래스)."
+  },
+  {
+   "no": "B14",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/CrudLogRules.java",
+   "desc": "규칙 한 곳: 접두어 → R·C·U·D(+E), PARAMS 머리 ip·auth·err + 인자 JSON(비밀값 지움, 500바이트), 이력번호 모양."
+  },
+  {
+   "no": "B15",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/HistIdGenerator.java",
+   "desc": "이력번호 = 시각14 + 서버번호1 + 초당 일련4(잠정 Q-31)."
+  },
+  {
+   "no": "B16",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/CrudLogEntry.java",
+   "desc": "TB_SCR_CUD_HIST 한 행(감사 4컬럼 상속)."
+  },
+  {
+   "no": "B17",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/CrudLogMapper.java",
+   "desc": "저장 매퍼."
+  },
+  {
+   "no": "B18",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/common/CrudLogMapper.xml",
+   "desc": "INSERT — 메뉴ID 는 메뉴경로로 TB_SCR_MENU 에서 찾음."
+  },
+  {
+   "no": "B19",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/CrudLogWriter.java",
+   "desc": "다른 트랜잭션(REQUIRES_NEW)으로 저장."
+  },
+  {
+   "no": "B20",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/CrudLogContext.java",
+   "desc": "요청 하나 동안 실행된 SQL 보관소."
+  },
+  {
+   "no": "B21",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/ExecutedSqlCapture.java",
+   "desc": "MyBatis 플러그인 — 실행된 SQL 에 실제 값을 끼워 모음(공통 인프라 매퍼 제외)."
+  },
+  {
+   "no": "B22",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/uselog/CrudLogAspect.java",
+   "desc": "자동 기록 — 메서드 이름 접두어, 성공 Y·실패 N(+오류코드), 원래 예외 그대로, 저장 실패는 로그만."
+  },
+  {
+   "no": "B23",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/lookup/controller/LookupController.java",
+   "desc": "@ExcludeCrudLog 한 줄(공통 콤보 — 기록 안 함, 사용자 결정)."
+  },
+  {
+   "no": "B24",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menu/controller/MenuController.java",
+   "desc": "@ExcludeCrudLog 한 줄(내 메뉴 — 기록 안 함, 사용자 결정)."
+  },
+  {
+   "no": "B25",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/common/auth/MeController.java",
+   "desc": "@ExcludeCrudLog 한 줄(내 정보 — 기록 안 함, 사용자 결정)."
+  },
+  {
+   "no": "B26",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/login/controller/LoginController.java",
+   "desc": "@ExcludeCrudLog 한 줄(로그인·공개키 — 기록 안 함, 사용자 결정)."
+  },
+  {
+   "no": "B27",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/dashboard/controller/DashboardController.java",
+   "desc": "@ExcludeCrudLog 한 줄(대시보드 — 기록 안 함, 사용자 결정)."
+  },
+  {
+   "no": "B28",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/notice/controller/NoticeController.java",
+   "desc": "메서드 이름만 접두어로(list→selectList, get→selectDetail, create→insert). 경로·동작 그대로."
+  },
+  {
+   "no": "B29",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/mcninfo/controller/McnInfoController.java",
+   "desc": "메서드 이름만 접두어로(list→selectList, get→selectDetail, create→insert). 경로·동작 그대로."
+  },
+  {
+   "no": "B30",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/mcnmodel/controller/McnModelController.java",
+   "desc": "메서드 이름만 접두어로(list→selectList, saveBatch→updateBatch). 경로·동작 그대로."
+  },
+  {
+   "no": "B31",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/authmgt/controller/AuthMgtController.java",
+   "desc": "메서드 이름만 접두어로(users→selectUsers 등 8개). 경로·동작 그대로."
+  },
+  {
+   "no": "B32",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/menumgt/controller/MenuMgtController.java",
+   "desc": "메서드 이름만 접두어로(menus→selectMenus, create→insert). 경로·동작 그대로."
+  },
+  {
+   "no": "B33",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/codemgt/controller/CodeMgtController.java",
+   "desc": "메서드 이름만 접두어로(masters→selectMasters 등 6개). 경로·동작 그대로."
+  },
+  {
+   "no": "B34",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/uselog/dto/UseLog.java",
+   "desc": "사용기록 1행(이름 조인 + PARAMS 머리 ip·auth·err)."
+  },
+  {
+   "no": "B35",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/uselog/dto/UseLogSearchDto.java",
+   "desc": "조회조건(기간 필수, 수행작업·결과·사무소·사용자·화면·IP)."
+  },
+  {
+   "no": "B36",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/uselog/dto/UseLogExcelRequest.java",
+   "desc": "엑셀 기록 요청(파일 이름·행 수)."
+  },
+  {
+   "no": "B37",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/uselog/mapper/UseLogMapper.java",
+   "desc": "목록·건수·1건."
+  },
+  {
+   "no": "B38",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/uselog/UseLogMapper.xml",
+   "desc": "TB_SCR_CUD_HIST ⟕ TB_INSA·TB_OFC_REG_MGT·TB_SCR_MENU, 최근 순 페이징."
+  },
+  {
+   "no": "B39",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/uselog/service/UseLogRules.java",
+   "desc": "기간 31일·값 검사·보이는 범위(관리자 전체/그 밖 내 사무소)."
+  },
+  {
+   "no": "B40",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/uselog/service/UseLogService.java",
+   "desc": "목록·상세(404 ULG_001)·엑셀 기록(E)."
+  },
+  {
+   "no": "B41",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/uselog/controller/UseLogController.java",
+   "desc": "API 3개(목록·상세 QRY, 엑셀 기록 = 누구나·자동 기록 제외)."
+  },
+  {
+   "no": "B42",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/common/uselog/CrudLogRulesTest.java",
+   "desc": "규칙 시험."
+  },
+  {
+   "no": "B43",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/common/uselog/CrudLogAspectTest.java",
+   "desc": "성공·실패·저장 실패 격리·사용자 없음."
+  },
+  {
+   "no": "B44",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/common/uselog/CrudLogNamingGuardTest.java",
+   "desc": "컨트롤러 API 메서드 = 접두어 또는 @ExcludeCrudLog(아니면 빌드 실패)."
+  },
+  {
+   "no": "B45",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/uselog/UseLogServiceTest.java",
+   "desc": "조회 서비스 시험."
+  },
+  {
+   "no": "F1",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/domain/useLog.ts",
+   "desc": "계약 §12 타입."
+  },
+  {
+   "no": "F2",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/api/endpoints/useLog.ts",
+   "desc": "목록·상세·엑셀 기록 API."
+  },
+  {
+   "no": "F3",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/utils/excel.ts",
+   "desc": "downloadExcel 이 내려받기 전에 엑셀 기록(E)을 보냄(실패해도 내려받음)."
+  },
+  {
+   "no": "F4",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/SearchForm.tsx",
+   "desc": "공통 조회조건: 직접 그리는 칸(공통 팩토리)에도 disabled 전달 — 영업점 사무소 칸 고정이 안 걸리던 버그.",
+   "at": "914fe5f"
+  },
+  {
+   "no": "F5",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/optionFields.tsx",
+   "desc": "공통 화면(메뉴) 콤보 MenuSelect·menuField."
+  },
+  {
+   "no": "F6",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/screenIds.ts",
+   "desc": "sample.useLog · popup.useLogView 두 줄."
+  },
+  {
+   "no": "F7",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/UseLogParts.tsx",
+   "desc": "조회조건·파라미터·수행작업 태그·컬럼·상세 항목."
+  },
+  {
+   "no": "F8",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/popup/UseLogViewModal.tsx",
+   "desc": "상세 팝업(파라미터 원문·실행 SQL·[복사])."
+  },
+  {
+   "no": "F9",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/sample/UseLogPage.tsx",
+   "desc": "화면 본체."
+  },
+  {
+   "no": "F10",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/registry.ts",
+   "desc": "def(sample.useLog) 한 줄 — 화면 파일 다음."
+  },
+  {
+   "no": "D1",
+   "kind": "new",
+   "path": "db/change/use_log_menu.sql",
+   "desc": "메뉴 행(견본 화면 아래 사용기록조회)."
+  },
+  {
+   "no": "D2",
+   "kind": "diff",
+   "path": "db/tools/gen_ddl.py",
+   "desc": "표 목록에 TB_SCR_CUD_HIST, 데이터타입 CLOB 허용."
+  },
+  {
+   "no": "D3",
+   "kind": "diff",
+   "path": "db/ddl/_source_columns.csv",
+   "desc": "TB_SCR_CUD_HIST 14컬럼(엑셀 사진 판독)."
+  },
+  {
+   "no": "D4",
+   "kind": "diff",
+   "path": "db/ddl/_source_entities.csv",
+   "desc": "TB_SCR_CUD_HIST 엔터티 한 줄."
+  },
+  {
+   "no": "D5",
+   "kind": "new",
+   "path": "db/ddl/TB_SCR_CUD_HIST.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "D6",
+   "kind": "diff",
+   "path": "db/check/01_exists.sql",
+   "desc": "확인 목록 22개."
+  },
+  {
+   "no": "D7",
+   "kind": "diff",
+   "path": "db/check/02_columns.sql",
+   "desc": "확인 목록 + 컬럼 수 14."
+  }
+ ]
+}

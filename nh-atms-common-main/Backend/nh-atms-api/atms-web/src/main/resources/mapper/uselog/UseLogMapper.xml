@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  사용기록조회(sample.useLog) — API 계약 §12. TB_SCR_CUD_HIST(사용자기록이력, 2026-11-17 정본 사진)
+  - 사용자·사무소·메뉴는 LEFT JOIN — 인사·메뉴에서 빠져도 기록은 보인다(이름만 비어 있음)
+  - 일자 = CRT_DTM CHAR(14) 앞 8자리 범위(서비스가 기간 필수·최대 31일 검사)
+  - IP 는 컬럼이 없어 PARAMS 머리 'ip=<IP> ' 로 찾는다(ipLike, CrudLogRules)
+  - HIST_ID 는 19자리 → TO_CHAR 로 글자로 내려 보낸다(JSON 숫자 정밀도)
+  - ${} 금지
+-->
+<mapper namespace="kr.co.nh.atms.web.uselog.mapper.UseLogMapper">
+
+    <sql id="searchWhere">
+        WHERE H.CRT_DTM &gt;= #{fromDate} || '000000'
+          AND H.CRT_DTM &lt;= #{toDate} || '235959'
+        <if test="none">
+          AND 1 = 0
+        </if>
+        <if test="ofcCode != null">
+          AND H.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+        </if>
+        <if test="perNo != null">
+          AND H.PER_NO = #{perNo}
+        </if>
+        <if test="menuId != null">
+          AND H.MENU_ID = #{menuId}
+        </if>
+        <if test="cudType != null">
+          AND H.CUD_TYPE = CAST(#{cudType} AS CHAR(1))
+        </if>
+        <if test="succYn != null">
+          AND H.SUCC_YN = CAST(#{succYn} AS CHAR(1))
+        </if>
+        <if test="ipLike != null">
+          AND H.PARAMS LIKE #{ipLike}
+        </if>
+    </sql>
+
+    <sql id="columns">
+        TO_CHAR(H.HIST_ID) AS HIST_ID,
+               H.CRT_DTM,
+               H.DEPT_CODE,
+               H.OFC_CODE,
+               O.KANM,
+               H.PER_NO,
+               I.NAME,
+               H.MENU_ID,
+               M.MENU_NM,
+               H.CUD_TYPE,
+               H.SUCC_YN,
+               H.URI,
+               H.PARAMS
+    </sql>
+
+    <sql id="joins">
+          LEFT JOIN TB_OFC_REG_MGT O ON O.OFC_CODE = H.OFC_CODE
+          LEFT JOIN TB_INSA I ON I.PER_NO = H.PER_NO
+          LEFT JOIN TB_SCR_MENU M ON M.MENU_ID = H.MENU_ID
+    </sql>
+
+    <select id="selectList" resultType="kr.co.nh.atms.web.uselog.dto.UseLog">
+        SELECT <include refid="columns"/>
+          FROM TB_SCR_CUD_HIST H
+        <include refid="joins"/>
+        <include refid="searchWhere"/>
+         ORDER BY H.HIST_ID DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+    </select>
+
+    <select id="countList" resultType="long">
+        SELECT COUNT(*)
+          FROM TB_SCR_CUD_HIST H
+        <include refid="searchWhere"/>
+    </select>
+
+    <select id="selectOne" resultType="kr.co.nh.atms.web.uselog.dto.UseLog">
+        SELECT <include refid="columns"/>,
+               H.SQL_TEXT
+          FROM TB_SCR_CUD_HIST H
+        <include refid="joins"/>
+         WHERE H.HIST_ID = #{histId}
+    </select>
+
+</mapper>

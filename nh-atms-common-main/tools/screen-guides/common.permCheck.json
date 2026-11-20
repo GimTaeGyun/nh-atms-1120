@@ -1,0 +1,37 @@
+{
+ "order": 11,
+ "screenKey": "(공통) 반입 전 권한 점검",
+ "title": "반입 전 권한 점검 — 권한관리 저장 즉시 반영 + 권한 지킴이 시험",
+ "body": "common.permCheck.md",
+ "base": "86e8aa1",
+ "groups": {
+  "F": "프론트",
+  "B": "백엔드 시험"
+ },
+ "steps": [
+  {
+   "no": "F1",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/popup/AuthUserEditModal.tsx",
+   "desc": "useAfterAuthChange(목록 + 내 정보·내 메뉴 조용히 다시 읽기) 추가, 저장 성공 때 사용."
+  },
+  {
+   "no": "F2",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/sample/AuthMgtParts.tsx",
+   "desc": "사용자 권한 삭제·메뉴 권한 저장 성공 때 useAfterAuthChange."
+  },
+  {
+   "no": "B1",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/common/auth/MenuAuthCoverageTest.java",
+   "desc": "모든 API = @RequireMenuAuth(이름 접두어와 같은 플래그) 또는 예외 목록."
+  },
+  {
+   "no": "B2",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/menu/MenuServiceTest.java",
+   "desc": "3단계 가지치기 시험 1개(SQL 글자 확인 시험은 2026-11-18 삭제 — 폐쇄망 매퍼와 글자가 달라 실패)."
+  }
+ ]
+}

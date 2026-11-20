@@ -1,0 +1,88 @@
+/* 대시보드(main.dashboard) — 사진(설계서 26-0000 초기화면) 비율. 크기는 화면 비율 1(2026-11-18 × 0.8 되돌림 — 이미지 350×200, 바로가기 칸 90px) */
+.dash button { font: inherit; }
+.dash { display: flex; flex-direction: column; gap: 18px; padding: 6px 4px 0; min-width: 0; }
+.dash-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 31%); gap: 30px; }
+.dash-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* 2026-11-17: 콤보 ↔ 운영대수 카드 간격 최소(남는 높이는 아래 표가 가져감) */
+.dash-left > .dash-cards { margin-top: -8px; }
+
+/* 2026-11-17: 사무소명(왼쪽) ……… 이미지 280×160 + 바로가기 가로 3칸(칸당 72px) — 이미지·바로가기는 오른쪽 끝 정렬 */
+.dash-hero { display: grid; grid-template-columns: minmax(0, 1fr) 350px auto; align-items: center; gap: 20px; min-height: 200px; }
+.dash-ofc .sys { color: var(--accent, #0054a6); font-weight: 700; font-size: var(--fs-sm); }
+.dash-ofc h1 { margin: 4px 0 2px; font-size: 42px; font-weight: 800; color: #0b4ea2; line-height: 1.15; letter-spacing: -0.02em; }
+.dash-ofc h1 small { font-size: var(--fs); font-weight: 700; margin-left: 6px; color: #0b4ea2; }
+.dash-ofc .code { color: #4f74a8; font-size: var(--fs-sm); }
+/* 캐릭터 이미지 자리(반입 전 빈 자리) — 사진 비율 280×160(2026-11-17 키움) */
+.dash-chara { width: 350px; height: 200px; flex: none; border: 1px dashed var(--border); border-radius: 10px; background: var(--bg-subtle); }
+/* 바로가기 가로 3칸(시안 C: 위쪽 파란 띠) — 높이 = 이미지 160px, 칸당 72px */
+.dash-links { height: 200px; display: grid; grid-template-columns: repeat(3, 90px); gap: 6px; min-width: 0; }
+.dash-ql { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; padding: 8px 6px; border: 1px solid var(--border); border-top: 4px solid #0b4ea2; border-radius: 4px; background: var(--bg-subtle); color: var(--text); font: inherit; cursor: pointer; text-align: center; }
+.dash-ql:hover { background: #e3edf8; }
+.dash-ql .nm { font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-ql .ds { color: var(--text-secondary); font-size: var(--fs-sm); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-ql .go { position: absolute; right: 7px; top: 4px; color: var(--text-muted); }
+.dash-ql.empty, .dash-ql.denied { opacity: .55; cursor: default; }
+.dash-ql.empty:hover, .dash-ql.denied:hover { background: var(--bg-subtle); }
+
+.dash-cond { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.dash-cond .fields { display: flex; flex-direction: column; gap: 6px; width: 350px; max-width: 100%; }
+.dash-cond .f { display: grid; grid-template-columns: 95px minmax(0, 1fr); align-items: center; gap: 8px; }
+.dash-cond label { font-weight: 700; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--text); }
+.dash-cond label::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--text); }
+/* 밑줄형 콤보(사진 3) */
+.dash-cond .ant-select .ant-select-selector { border-width: 0 0 1px !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; padding-inline: 4px !important; font-weight: 600; }
+.dash-cond .ant-select-disabled .ant-select-selector { border-bottom-style: dashed !important; color: var(--text-secondary) !important; }
+.dash-cond .acts { display: flex; gap: 6px; align-items: center; }
+.dash .dash-btn { font-weight: 700; }
+.dash-btn { height: 36px; border-radius: 8px; border: 0; background: #0b2346; color: #fff; padding: 0 26px; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+.dash-btn:disabled { opacity: .5; cursor: default; }
+.dash-reset { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #0b4ea2; background: transparent; color: #0b4ea2; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.dash-stale { flex-basis: 100%; font-size: var(--fs-xs); color: var(--warning, #b7791f); font-weight: 700; }
+
+.dash-cards { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 0.9fr) minmax(0, 1.5fr); gap: 12px; align-items: stretch; }
+.dash-card { border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px 8px; display: flex; flex-direction: column; justify-content: space-between; gap: 2px; min-width: 0; background: var(--bg-panel); }
+.dash-card .k { color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-card .v { text-align: left; font-size: 42px; font-weight: 800; color: #12305f; line-height: 1.15; margin-top: 4px; }
+.dash-card .v small { font-size: var(--fs); font-weight: 500; margin-left: 3px; color: var(--text-secondary); }
+.dash-card .at { font-size: var(--fs-xs); color: var(--text-muted); }
+.dash-st-wrap { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* '상세보기 ›' 는 상태 상자 위 오른쪽 빈 곳에 겹쳐 둔다(빈 줄 없음, 2026-11-17) */
+.dash-st-head { position: absolute; right: 0; bottom: 100%; margin-bottom: 4px; display: flex; justify-content: flex-end; }
+/* 5번 기기상태: 칸마다 회색 테두리 상자(2026-11-16 사용자 결정) — 바깥 큰 상자 없음 */
+.dash-status { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dash-st { border: 1px solid var(--border); background: var(--bg-panel); cursor: pointer; text-align: left; display: grid; padding: 6px 10px; border-radius: 6px; color: var(--text); }
+.dash-st:hover { border-color: #9fb3c8; }
+.dash-st .lb { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.dash-st .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dash-st b { justify-self: end; font-size: 22px; font-weight: 800; color: #12305f; }
+.dash-st b small { font-size: var(--fs-sm); font-weight: 500; color: var(--text-secondary); margin-left: 2px; }
+.dash-st[aria-pressed="true"] { background: #e3edf8; border-color: #0b4ea2; }
+.st-ok .dot { background: #1f8a5b; } .st-err .dot { background: #d0342c; } .st-fix .dot { background: #e0a51b; } .st-off .dot { background: #9aa3ad; }
+.dash-link { border: 0; background: none; color: var(--text-secondary); cursor: pointer; padding: 0; font-weight: 600; }
+
+.dash-notice { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 6px 4px; }
+.dash-notice .row { display: flex; justify-content: space-between; align-items: center; }
+.dash-notice h2 { font-size: 18px; margin: 0; }
+.dash-notice ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dash-notice li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 9px 0; align-items: center; }
+.dash-notice-link { border: 0; background: none; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 5px; min-width: 0; color: var(--text); text-align: left; }
+.dash-notice-link:hover .dash-notice-subj { text-decoration: underline; }
+.dash-notice-dash { color: var(--text-muted); flex: none; }
+.dash-notice-all { flex: none; font-size: var(--fs-xs); font-weight: 700; color: #0b4ea2; background: #e3edf8; border-radius: 8px; padding: 0 6px; }
+.dash-notice-subj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dash-notice-new { flex: none; font-size: var(--fs-xs); font-weight: 700; color: #d0342c; border: 1px solid #f3c0bb; border-radius: 8px; padding: 0 4px; }
+.dash-notice-date { color: var(--text-muted); font-size: var(--fs-sm); }
+
+.dash-table { display: flex; flex-direction: column; min-width: 0; }
+/* 4번 표 = 공통 ResultHeader + DataGrid(bordered) — 화면 전용 표 CSS 없음(2026-11-16 사용자 결정) */
+
+@media (max-width: 1200px) {
+  .dash-top { grid-template-columns: minmax(0, 1fr); }
+  .dash-chara { width: 245px; height: 140px; }
+  .dash-hero { grid-template-columns: minmax(0, 1fr) 245px auto; min-height: 140px; }
+  .dash-links { height: 140px; }
+}
+@media (max-width: 800px) {
+  .dash-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-st-wrap { grid-column: 1 / -1; }
+}
