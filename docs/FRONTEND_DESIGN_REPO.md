@@ -1,6 +1,6 @@
 # 프론트 퍼블리싱 외주 저장소(nh-atms-design) — 분리 · 최신화 · 재병합 절차
 
-작성 2026-11-20. 대상: 저장소 관리자(우리). 외주업체용 안내는 디자인 레포의 `README.md`·`CONTRIBUTING.md`.
+작성 2026-11-20. 대상: 저장소 관리자(우리). 외주업체용 안내는 디자인 레포의 `README.md` 하나(2026-11-20 CONTRIBUTING 통합).
 
 ## 0. 한눈에 보기
 
@@ -53,7 +53,7 @@ git push design ui-split:main
 | `eslint.config.js` | `globalIgnores` 에 `public/mockServiceWorker.js` 추가 | 제외 |
 | `src/screens/_template/**`, `src/mocks/data/templateList.ts` | **새 화면 견본**(2026-11-20 추가) — 외주가 복사해 새 화면을 만드는 틀. View(표시 전용)·Columns·EditModal·Page(더미 껍데기) 분리 | 제외 |
 | `src/screens/registry.ts`, `screenIds.ts` 의 `// [디자인 레포 전용]` 줄 | 견본 화면 등록 1줄씩 | 3절에서 `sed` 로 삭제 |
-| `README.md`, `CONTRIBUTING.md`, `.github/**`, `scripts/check-paths.mjs`, `.gitattributes`, `.editorconfig` | 외주 안내·규칙·자동 점검 | 제외 |
+| `README.md`, `.github/**`, `scripts/check-paths.mjs`, `.gitattributes`, `.editorconfig` | 외주 안내·규칙·자동 점검 | 제외 |
 
 `package.json` 은 바꾸지 않았다(`msw` 는 이미 devDependencies 에 있음). 운영 빌드(`npm run build`)에는 가짜 API 가 들어가지 않는다(확인함).
 
@@ -191,7 +191,7 @@ git commit -m "UI 퍼블리싱 반영 (nh-atms-design main 기준)"
 
 ## 4. 재병합에서 제외되는 것 (요약)
 
-`src/mocks/**`, `public/mockServiceWorker.js`, `src/screens/_template/**`, registry·screenIds 의 `[디자인 레포 전용]` 줄(sed), `src/main.tsx`, `.env*`, `eslint.config.js`, `package*.json`, `vite.config.ts`, `tsconfig*`, `index.html`, `README.md`, `CONTRIBUTING.md`, `.github/**`, `scripts/**`, `.gitattributes`, `.editorconfig` — 3절 diff 의 경로 지정이 이들을 자동으로 뺀다.
+`src/mocks/**`, `public/mockServiceWorker.js`, `src/screens/_template/**`, registry·screenIds 의 `[디자인 레포 전용]` 줄(sed), `src/main.tsx`, `.env*`, `eslint.config.js`, `package*.json`, `vite.config.ts`, `tsconfig*`, `index.html`, `README.md`, `.github/**`, `scripts/**`, `.gitattributes`, `.editorconfig` — 3절 diff 의 경로 지정이 이들을 자동으로 뺀다.
 
 ## 5. 검증 기록 (2026-11-20)
 
