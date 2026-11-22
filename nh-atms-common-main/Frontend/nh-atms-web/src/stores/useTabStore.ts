@@ -30,7 +30,8 @@ export const useTabStore = create<TabState>()(
         const key = tab.screenKey;
         const exists = tabs.find((t) => t.key === key);
         if (exists) {
-          set({ activeKey: key });
+          // 메뉴가 늦게 도착하면(주소로 바로 연 탭) 같은 화면을 다시 열 때 DB 메뉴명으로 제목을 고친다
+          set(exists.title === tab.title ? { activeKey: key } : { activeKey: key, tabs: tabs.map((t) => (t.key === key ? { ...t, title: tab.title } : t)) });
           return true;
         }
         if (tabs.length >= MAX_OPEN_TABS) return false;
