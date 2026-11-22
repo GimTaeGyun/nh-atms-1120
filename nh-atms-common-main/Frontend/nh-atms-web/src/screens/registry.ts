@@ -1,12 +1,14 @@
 import { lazy } from 'react';
 import type { ScreenDef } from '@/types/screen';
-import { HOME_SCREEN_KEY, SCREEN_IDS, isScreenKey, type ScreenKey } from './screenIds';
+import { HOME_SCREEN_KEY, isScreenKey, type ScreenKey } from './screenIds';
 
 /**
- * 화면 레지스트리 — 영문 화면키 → 화면 파일(컴포넌트). 등록하면 라우트·탭이 자동 연결된다.
+ * 화면 레지스트리 — 화면 파일을 **자동으로** 찾는다. 등록 줄이 없다(새 화면 = 파일 하나 + DB 메뉴 행).
  * **메뉴 구조(대·중·소메뉴, 이름, 순서)는 여기 두지 않는다** — DB(TB_SCR_MENU)·메뉴관리 화면이 정본(2026-11-12 사용자 결정).
- * 파일명 규칙: `screens/<slug>/{PascalName}Page.tsx` (1 화면키 = 1 파일, 번호 없음). 라우트는 /{slug}/{kebab-case 이름}.
+ * 파일명 규칙: `screens/<slug>/{PascalName}Page.tsx` + `export default` → 화면키 `<slug>.{pascalName}`, 라우트 /{slug}/{kebab-case 이름}.
+ *   예: screens/sample/NoticePage.tsx → 'sample.notice' → /sample/notice. 홈은 screens/home/HomePage.tsx → 'home' → /home.
  * 메뉴 테이블(TB_SCR_MENU.MENU_PATH)에는 이 라우트 경로를 넣는다 → `parseScreenPath` 로 화면키를 찾는다(잠정 Q-05).
+ * 메뉴에는 있는데 파일이 없으면 빈 화면(PlaceholderScreen)이 열린다.
  */
 /** camelCase → kebab: 정규식 `([a-z0-9])([A-Z])` → `$1-$2` 후 전체 소문자 (백엔드 MenuAuthService.menuPathOf 와 같은 규칙) */
 const kebab = (s: string): string => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
@@ -27,32 +29,33 @@ export const screenPath = (key: ScreenKey): string => (key === HOME_SCREEN_KEY ?
 
 type ScreenModule = { default: ScreenDef['component'] extends React.LazyExoticComponent<infer C> ? C : never };
 
-/** 화면 한 줄 — 화면키 · 메뉴에 없을 때 쓸 이름 · 화면 파일 */
-const def = (key: ScreenKey, title: string, loader: () => Promise<ScreenModule>, extra?: Partial<ScreenDef>): ScreenDef => ({
+/** 화면 파일 전부(지연 로딩). 키 = './sample/NoticePage.tsx'. 로그인은 탭 화면이 아니라 뺀다(router.tsx 가 직접 씀) */
+const PAGE_FILES = import.meta.glob<ScreenModule>(['./*/*Page.tsx', '!./login/**']);
+
+/** './sample/NoticePage.tsx' → 'sample.notice', './home/HomePage.tsx' → 'home'. 규칙 밖 파일은 null */
+const keyOfFile = (file: string): ScreenKey | null => {
+  const m = /^\.\/([a-z]+)\/([A-Z][A-Za-z0-9]*)Page\.tsx$/.exec(file);
+  if (!m) return null;
+  if (m[1] === HOME_SCREEN_KEY && m[2] === 'Home') return HOME_SCREEN_KEY;
+  return `${m[1]}.${m[2].charAt(0).toLowerCase()}${m[2].slice(1)}`;
+};
+
+/** 화면 한 줄 — 제목은 메뉴에 없을 때만 쓰인다(메뉴에 있으면 DB 메뉴명). 홈 말고는 화면키를 그대로 */
+const def = (key: ScreenKey, loader: () => Promise<ScreenModule>): ScreenDef => ({
   key,
-  screenId: SCREEN_IDS[key],
+  screenId: '',
   path: screenPath(key),
-  title,
+  title: key === HOME_SCREEN_KEY ? '홈' : key,
   openMode: key === HOME_SCREEN_KEY ? 'HOME' : 'TAB',
   component: lazy(loader),
   status: 'done',
-  ...extra,
 });
 
 export const SCREENS: Record<string, ScreenDef> = Object.fromEntries(
-  [
-    def(HOME_SCREEN_KEY, '홈', () => import('./home/HomePage')),
-    def('main.dashboard', '대시보드', () => import('./main/DashboardPage')),
-    // ---- 견본(sample): 공통 모듈 화면 + CRUD 모양 3가지 + 관리 화면 ----
-    def('sample.commonModules', '공통 모듈', () => import('./sample/CommonModulesPage')),
-    def('sample.notice', '공지사항', () => import('./sample/NoticePage')),
-    def('sample.mcnInfo', '기기정보', () => import('./sample/McnInfoPage')),
-    def('sample.mcnModel', '기기모델코드', () => import('./sample/McnModelPage')),
-    def('sample.authMgt', '권한관리', () => import('./sample/AuthMgtPage')),
-    def('sample.menuMgt', '메뉴관리', () => import('./sample/MenuMgtPage')),
-    def('sample.codeMgt', '코드관리', () => import('./sample/CodeMgtPage')),
-    def('sample.useLog', '사용기록조회', () => import('./sample/UseLogPage')),
-  ].map((d) => [d.key, d]),
+  Object.entries(PAGE_FILES).flatMap(([file, loader]) => {
+    const key = keyOfFile(file);
+    return key ? [[key, def(key, loader)] as const] : [];
+  }),
 );
 
 const BY_PATH: Record<string, ScreenDef> = Object.fromEntries(Object.values(SCREENS).map((d) => [d.path, d]));
@@ -61,7 +64,7 @@ export const getScreen = (key?: string | null): ScreenDef | undefined => (key ? 
 
 /**
  * 경로 → 화면키. /home 과 /{slug}/{kebab} 만 인정(slug 는 화면키 앞부분 — 메뉴 구조와 무관).
- * 메뉴 응답의 `menuPath` 도 이것으로 화면키를 찾는다. 레지스트리에 없는(아직 미구현) 화면도 screenIds 에 키가 있으면 연다.
+ * 메뉴 응답의 `menuPath` 도 이것으로 화면키를 찾는다. 화면 파일이 없는(아직 미구현) 경로도 화면키를 돌려준다 → 빈 화면으로 열린다.
  */
 export const parseScreenPath = (pathname: string | null | undefined): { screenKey: ScreenKey } | null => {
   if (!pathname) return null;
