@@ -52,5 +52,15 @@ export const timeOptions = (stepMin = 30): { value: string; label: string }[] =>
   return out;
 };
 
+/**
+ * 시 단위 옵션 [신규] 2026-11-24 저널조회 — 시작 칸 값 'HH00'(글자 'HH:00:00'), 끝 칸 값 'HH59'(글자 'HH:59:59').
+ * 값은 timeOptions 와 같은 HHmm 이라 timeParams 그대로 쓰고, 서버가 시작 00초·끝 59초를 붙인다.
+ */
+export const hourOptions = (end: boolean): { value: string; label: string }[] =>
+  Array.from({ length: 24 }, (_, h) => {
+    const hh = String(h).padStart(2, '0');
+    return end ? { value: `${hh}59`, label: `${hh}:59:59` } : { value: `${hh}00`, label: `${hh}:00:00` };
+  });
+
 export { dayjs };
 export type { Dayjs };

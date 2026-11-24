@@ -7,6 +7,7 @@
  *  - keywordField  검색어 한 칸(이름 'q'). 서버가 여러 컬럼에서 부분일치로 찾는 칸
  *  - keywordTypeFields  검색구분(전체·제목·내용…) + 검색어 두 칸. 검색구분이 '전체'면 검색어 칸이 꺼지고 비워진다
  *  - enabledBy     어떤 칸을 다른 칸 값에 따라 켜고 끈다(꺼지면 값도 비움). 예: 공지 범위 = '사무소 공지' 일 때만 사무소 칸
+ *  - keywordTypeFields({ optionsBy }) 다른 칸 값에 따라 검색구분 선택지 바꾸기 [신규] 2026-11-24 저널조회
  *  - menuField     화면(메뉴) 콤보 — 내 메뉴(GET /menu/my) 의 화면들, 값 = 메뉴ID, 검색 가능 [신규] 2026-11-17 사용기록조회
  * 값 → API 파라미터: `allToUndef(v.x)`(params.ts) · `keywordOf(v)` · `keywordTypeOf(v)`.
  */
@@ -129,6 +130,13 @@ export interface KeywordTypeOptions {
   keywordName?: string;
   typeLabel?: string;
   keywordLabel?: string;
+  /**
+   * [신규] 2026-11-24 저널조회 — 다른 칸(watch) 값에 따라 검색구분 선택지를 바꾼다(예: 저널구분 → 계좌·수표·명세표).
+   * 지금 고른 값이 새 선택지에 없으면 '전체'로 돌아간다. map 은 화면 파일 바깥(모듈 수준)에 두어 매번 새로 만들지 않는다.
+   */
+  optionsBy?: { watch: string; map: (watched: unknown) => Option[] };
+  /** 검색어 칸 안내 글(검색구분을 고른 뒤) — 기본 '검색어' */
+  keywordPlaceholder?: string;
 }
 
 /** '전체' 검색구분 값 — 검색어를 쓰지 않는다 */
@@ -138,20 +146,39 @@ export const KEYWORD_TYPE_ALL = 'ALL';
  * 검색구분 + 검색어 두 칸. 검색구분 '전체'(값 'ALL')면 검색어 칸이 꺼지고 비워진다.
  * 펼쳐서 쓴다: `fields = [rangeField(…), ...keywordTypeFields({ options: [{ value: 'SUBJECT', label: '제목' }, …] })]`
  */
-export const keywordTypeFields = ({ options, typeName = 'field', keywordName = 'keyword', typeLabel = '검색구분', keywordLabel = '검색어' }: KeywordTypeOptions): SearchField[] => [
-  optionField(typeName, typeLabel, options, { allValue: KEYWORD_TYPE_ALL }),
+export const keywordTypeFields = ({ options, typeName = 'field', keywordName = 'keyword', typeLabel = '검색구분', keywordLabel = '검색어', optionsBy, keywordPlaceholder }: KeywordTypeOptions): SearchField[] => [
+  optionsBy
+    ? {
+        name: typeName,
+        label: typeLabel,
+        type: 'custom',
+        widthClass: 'code',
+        defaultValue: KEYWORD_TYPE_ALL,
+        render: (form) => <WatchedOptionSelect form={form} watch={optionsBy.watch} map={optionsBy.map} allValue={KEYWORD_TYPE_ALL} ariaLabel={typeLabel} />,
+      }
+    : optionField(typeName, typeLabel, options, { allValue: KEYWORD_TYPE_ALL }),
   enabledBy(
-    { name: keywordName, label: keywordLabel, type: 'custom', widthClass: 'normal', render: (form) => <TypeKeywordInput form={form} typeName={typeName} label={keywordLabel} /> },
+    { name: keywordName, label: keywordLabel, type: 'custom', widthClass: 'normal', render: (form) => <TypeKeywordInput form={form} typeName={typeName} label={keywordLabel} placeholder={keywordPlaceholder} /> },
     typeName,
     (v) => !!v && v !== KEYWORD_TYPE_ALL,
   ),
 ];
 
+/** 다른 칸 값에 따라 선택지가 바뀌는 콤보 — 지금 값이 새 선택지에 없으면 '전체'(allValue)로 */
+const WatchedOptionSelect = ({ form, watch, map, allValue, ariaLabel, value, onChange, disabled }: ValueProps<string | undefined> & { form: FormInstance; watch: string; map: (watched: unknown) => Option[]; allValue: string; ariaLabel: string }) => {
+  const watched = Form.useWatch(watch, form);
+  const options = useMemo(() => map(watched), [map, watched]);
+  useEffect(() => {
+    if (value && value !== allValue && !options.some((o) => o.value === value)) onChange?.(allValue);
+  }, [options, value, allValue, onChange]);
+  return <OptionSelect value={value} onChange={onChange} disabled={disabled} options={options} allValue={allValue} ariaLabel={ariaLabel} />;
+};
+
 /** 검색구분이 '전체'면 안내 문구를 바꿔 보여 준다 */
-const TypeKeywordInput = ({ form, typeName, label, ...p }: ValueProps<string | undefined> & { form: FormInstance; typeName: string; label: string }) => {
+const TypeKeywordInput = ({ form, typeName, label, placeholder, ...p }: ValueProps<string | undefined> & { form: FormInstance; typeName: string; label: string; placeholder?: string }) => {
   const type = Form.useWatch(typeName, form) as string | undefined;
   const off = !type || type === KEYWORD_TYPE_ALL;
-  return <KeywordInput {...p} placeholder={off ? '검색구분을 고르세요' : '검색어'} ariaLabel={label} />;
+  return <KeywordInput {...p} placeholder={off ? '검색구분을 고르세요' : placeholder ?? '검색어'} ariaLabel={label} />;
 };
 
 /** 검색구분·검색어 값 → 파라미터. '전체'이거나 검색어가 비면 둘 다 undefined(조건 없음) */

@@ -67,6 +67,32 @@ export const fmtOffice = (ofcCode?: Nullable<string>, kanm?: Nullable<string>): 
   return kanm ? `[${ofcCode}] ${kanm}` : `[${ofcCode}]`;
 };
 
+/**
+ * 계좌번호 하이픈 — 개설은행코드·자릿수별(As-Is 저널조회 표시 규칙) [신규] 2026-11-24.
+ * 11자리·은행 11 → 3-2-6, 12자리·11 → 4-2-6, 13자리·11|12 → 3-4-4-2, 14자리·11|12 → 6-2-6, 14자리·16|17 → 3-2-5-4, 그 밖은 그대로
+ */
+export const fmtAcctNo = (acct?: Nullable<string>, bankCode?: Nullable<string>): string => {
+  if (!acct) return DASH;
+  const a = String(acct).trim();
+  const b = (bankCode ?? '').trim();
+  const cut = (...lens: number[]): string => {
+    const parts: string[] = [];
+    let i = 0;
+    for (const n of lens) {
+      parts.push(a.slice(i, i + n));
+      i += n;
+    }
+    if (i < a.length) parts.push(a.slice(i));
+    return parts.join('-');
+  };
+  if (a.length === 11 && b === '11') return cut(3, 2);
+  if (a.length === 12 && b === '11') return cut(4, 2);
+  if (a.length === 13 && (b === '11' || b === '12')) return cut(3, 4, 4);
+  if (a.length === 14 && (b === '11' || b === '12')) return cut(6, 2);
+  if (a.length === 14 && (b === '16' || b === '17')) return cut(3, 2, 5);
+  return a;
+};
+
 /** 전화번호 하이픈 */
 export const fmtPhone = (v?: Nullable<string>): string => {
   if (!v) return DASH;

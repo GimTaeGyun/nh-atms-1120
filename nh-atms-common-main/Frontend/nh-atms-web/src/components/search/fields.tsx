@@ -12,7 +12,7 @@ import type { Dayjs } from 'dayjs';
 import { useCodes } from '@/hooks/useCodes';
 import { useMcns, useOffices } from '@/hooks/useLookup';
 import { useAuthStore, selectOfcCode } from '@/stores/useAuthStore';
-import { timeOptions, today } from '@/utils/date';
+import { hourOptions, timeOptions, today } from '@/utils/date';
 import { fmtOffice } from '@/utils/format';
 import type { SearchField } from './SearchForm';
 import { OfficeSearchModal } from './OfficeSearchModal';
@@ -99,14 +99,17 @@ export interface TimeRangeValue {
   from: string;
   to: string;
 }
-export const TimeRangeSelect = ({ value, onChange, disabled, step = 30 }: ValueProps<TimeRangeValue | undefined> & { step?: number }) => {
+/** `hourly` [신규] 2026-11-24: 시 단위(시작 HH:00:00 / 끝 HH:59:59) — 값은 그대로 HHmm('HH00'·'HH59') */
+export const TimeRangeSelect = ({ value, onChange, disabled, step = 30, hourly = false }: ValueProps<TimeRangeValue | undefined> & { step?: number; hourly?: boolean }) => {
   const opts = useMemo(() => timeOptions(step), [step]);
+  const fromOpts = useMemo(() => (hourly ? hourOptions(false) : opts), [hourly, opts]);
+  const toOpts = useMemo(() => (hourly ? hourOptions(true) : opts), [hourly, opts]);
   const v = value ?? { from: '0000', to: '2359' };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
-      <Select value={v.from} onChange={(t) => onChange?.({ ...v, from: t })} options={opts} disabled={disabled} style={{ flex: 1 }} showSearch />
+      <Select value={v.from} onChange={(t) => onChange?.({ ...v, from: t })} options={fromOpts} disabled={disabled} style={{ flex: 1 }} showSearch aria-label="시작 시간" />
       <span className="muted">~</span>
-      <Select value={v.to} onChange={(t) => onChange?.({ ...v, to: t })} options={opts} disabled={disabled} style={{ flex: 1 }} showSearch />
+      <Select value={v.to} onChange={(t) => onChange?.({ ...v, to: t })} options={toOpts} disabled={disabled} style={{ flex: 1 }} showSearch aria-label="끝 시간" />
     </div>
   );
 };
@@ -155,13 +158,14 @@ export const mcnField = ({ officeField: ofcName = 'ofcCode', ...opts }: Partial<
   ...opts,
 });
 
-export const timeRangeField = (opts: Partial<SearchField> = {}): SearchField => ({
+/** 시간 범위(이름 'time'). `hourly: true` = 시 단위(시작 HH:00:00 / 끝 HH:59:59, 저널조회) */
+export const timeRangeField = ({ hourly = false, ...opts }: Partial<SearchField> & { hourly?: boolean } = {}): SearchField => ({
   name: 'time',
   label: '시간',
   type: 'custom',
   widthClass: 'long',
   defaultValue: { from: '0000', to: '2359' },
-  render: () => <TimeRangeSelect />,
+  render: () => <TimeRangeSelect hourly={hourly} />,
   ...opts,
 });
 
