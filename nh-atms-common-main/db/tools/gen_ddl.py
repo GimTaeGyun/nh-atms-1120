@@ -58,6 +58,11 @@ TABLES = (
     "TB_CODE_DTL",
     # 사용기록(2026-11-17) — 판독본 행(엑셀 사진). SQL_TEXT 가 CLOB
     "TB_SCR_CUD_HIST",
+    # 저널조회(2026-11-24) — 정본 CSV(nh-atms 20_TOBE컬럼정의서·엔터티목록) 행, 중복 인쇄는 한 벌만
+    "TB_JL_JNAL",
+    "TB_JL_JNAL_CHK",
+    "TB_JL_JNAL_ILM",
+    "TB_JL_JNAL_CHK_ILM",
 )
 
 COLUMN_HEADER = ["순번", "주제영역", "엔터티명", "테이블ID", "컬럼순서", "속성명", "컬럼명", "도메인명",
