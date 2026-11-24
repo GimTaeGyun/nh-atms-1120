@@ -148,6 +148,22 @@ class JnalRulesTest {
         assertThat(code(() -> dtls("12345"))).isEqualTo("VAL_003");
     }
 
+    @Test
+    void 계좌_검색어는_하이픈과_공백을_뗀다_명세표는_공백을_뗀다() {
+        JnalSearchDto s = search("20261124", "20261124");
+        s.setField("ACCT");
+        s.setKeyword("301-12-345678");
+        norm(s);
+        assertThat(s.getSchData1()).isEqualTo("30112345678");
+        assertThat(dtls(" 0001 - 0050 ")).containsExactly("0001", "0050");
+        JnalSearchDto dash = search("20261124", "20261124");
+        dash.setField("ACCT");
+        dash.setKeyword("--");
+        norm(dash);
+        assertThat(dash.getField()).isNull();
+        assertThat(dash.getSchData1()).isNull();
+    }
+
     private static List<String> dtls(String keyword) {
         JnalSearchDto s = search("20261124", "20261124");
         s.setField("DTLS");

@@ -488,7 +488,7 @@ interface JnalSearch {
   jnalType?: '22' | '33' | '11' | '44' | '55';          // 일반·수표·개국·합계·운영(비면 전체)
   jrnlProcRest?: '01' | '02' | '97' | '98' | '99';      // 정상·불능·취소정상·취소불능·확인요망
   field?: 'ACCT' | 'CHK' | 'DTLS';    // 계좌번호·수표번호·명세표일련번호 — 저널구분에 없는 값은 VAL_003(전체·33 = 셋, 22 = 계좌·명세표, 11·44·55 = 명세표)
-  keyword?: string;                   // 계좌·수표 = 부분일치(영문·숫자·-), 명세표 = '0001-0050' · '-0050' · '0001-' · 번호 하나(그 번호만)
+  keyword?: string;                   // 공백은 뗌. 계좌 = 하이픈도 떼고 부분일치, 수표 = 부분일치(영문·숫자·-), 명세표 = '0001-0050' · '-0050' · '0001-' · 번호 하나(그 번호만)
 }
 interface Jnal {
   jnalDt: string; jnalTime: string | null; jnalSeqno: string; ofcCode: string; mcnNo: string;

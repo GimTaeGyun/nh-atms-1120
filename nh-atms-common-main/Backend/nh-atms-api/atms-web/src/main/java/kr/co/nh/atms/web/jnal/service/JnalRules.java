@@ -140,7 +140,9 @@ public final class JnalRules {
     /** 조회조건·검색어 → schData1·2. 저널구분에 없는 조회조건은 VAL_003(As-Is 콤보 setCB_search_if) */
     private static void search(JnalSearchDto s, boolean restricted) {
         String field = upper(s.getField());
-        String keyword = trimToNull(s.getKeyword());
+        // 공백은 늘 떼고(As-Is 는 앞뒤 trim), 계좌는 하이픈도 뗀다 — 목록에 보이는 '301-12-345678' 을 그대로 붙여 넣어도 찾게
+        String raw = s.getKeyword() == null ? null : s.getKeyword().replaceAll("\\s+", "");
+        String keyword = trimToNull(FIELD_ACCT.equals(field) && raw != null ? raw.replace("-", "") : raw);
         s.setSchData1(null);
         s.setSchData2(null);
         if (restricted || field == null || "ALL".equals(field) || keyword == null) {
