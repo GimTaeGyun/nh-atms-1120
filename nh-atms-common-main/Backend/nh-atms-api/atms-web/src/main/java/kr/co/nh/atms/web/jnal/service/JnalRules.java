@@ -4,6 +4,7 @@ import kr.co.nh.atms.common.exception.BusinessException;
 import kr.co.nh.atms.web.common.Dates;
 import kr.co.nh.atms.web.common.OfficeCode;
 import kr.co.nh.atms.web.jnal.dto.Jnal;
+import kr.co.nh.atms.web.jnal.dto.JnalCheckKey;
 import kr.co.nh.atms.web.jnal.dto.JnalSearchDto;
 
 import java.time.LocalDate;
@@ -69,14 +70,8 @@ public final class JnalRules {
     }
 
     public static void normalize(JnalSearchDto s, String auth, boolean admin, String myOfc, String today) {
-        String ofc = canPickOffice(auth) || admin ? OfficeCode.norm(s.getOfcCode()) : OfficeCode.norm(myOfc);
-        if (ofc == null) throw new BusinessException("VAL_002", "ofcCode");
-        s.setOfcCode(ofc);
-
-        String mcn = trimToNull(s.getMcnNo());
-        if (mcn == null) throw new BusinessException("VAL_002", "mcnNo");
-        if (mcn.length() > 3 || !mcn.chars().allMatch(Character::isDigit)) throw new BusinessException("VAL_003", "mcnNo");
-        s.setMcnNo("0".repeat(3 - mcn.length()) + mcn);
+        s.setOfcCode(office(s.getOfcCode(), auth, admin, myOfc));
+        s.setMcnNo(mcnNo(s.getMcnNo()));
 
         String from = trimToNull(s.getFromDate());
         String to = trimToNull(s.getToDate());
@@ -89,11 +84,7 @@ public final class JnalRules {
         s.setFromDate(from);
         s.setToDate(to);
 
-        LocalDate t = Dates.parseYmd(today);
-        String limit2 = t.minusYears(DESTROY2_YEARS).format(Dates.YMD);
-        if (from.compareTo(limit2) <= 0) throw new BusinessException("JNL_001", Dates.dash10(limit2));
-        String limit1 = t.minusMonths(DESTROY1_MONTHS).format(Dates.YMD);
-        if (from.compareTo(limit1) <= 0 && !canSeeOld(auth, admin)) throw new BusinessException("JNL_002", Dates.dash10(limit1));
+        destroyLimits(from, auth, admin, today);
 
         s.setFrTi(hhmm(s.getFromTime(), "0000", "fromTime") + "00");
         s.setToTi(hhmm(s.getToTime(), "2359", "toTime") + "59");
@@ -106,6 +97,44 @@ public final class JnalRules {
         s.setJrnlProcRest(rest);
 
         search(s, itRestricted(myOfc, admin));
+    }
+
+    /** 수표목록 키 정리 — 사무소·기번·일자 규칙은 목록과 같다(다른 사무소·파기 대상 저널을 키로 직접 읽지 못하게). ilm 은 저널일자로 */
+    public static void normalizeKey(JnalCheckKey k, String auth, boolean admin, String myOfc, String today) {
+        k.setOfcCode(office(k.getOfcCode(), auth, admin, myOfc));
+        k.setMcnNo(mcnNo(k.getMcnNo()));
+        String dt = trimToNull(k.getJnalDt());
+        if (dt == null) throw new BusinessException("VAL_002", "jnalDt");
+        if (!isYmd(dt)) throw new BusinessException("VAL_003", "jnalDt");
+        String seq = trimToNull(k.getJnalSeqno());
+        if (seq == null) throw new BusinessException("VAL_002", "jnalSeqno");
+        if (seq.length() > 6) throw new BusinessException("VAL_003", "jnalSeqno");
+        destroyLimits(dt, auth, admin, today);
+        k.setJnalDt(dt);
+        k.setJnalSeqno(seq);
+        k.setIlm(isIlm(dt, today));
+    }
+
+    /** 2차 파기(5년) JNL_001, 1차 파기(3개월) 조회 허가 JNL_002 — 인클루드 chkLim·chkPermitINQ */
+    private static void destroyLimits(String from, String auth, boolean admin, String today) {
+        LocalDate t = Dates.parseYmd(today);
+        String limit2 = t.minusYears(DESTROY2_YEARS).format(Dates.YMD);
+        if (from.compareTo(limit2) <= 0) throw new BusinessException("JNL_001", Dates.dash10(limit2));
+        String limit1 = t.minusMonths(DESTROY1_MONTHS).format(Dates.YMD);
+        if (from.compareTo(limit1) <= 0 && !canSeeOld(auth, admin)) throw new BusinessException("JNL_002", Dates.dash10(limit1));
+    }
+
+    private static String office(String requested, String auth, boolean admin, String myOfc) {
+        String ofc = canPickOffice(auth) || admin ? OfficeCode.norm(requested) : OfficeCode.norm(myOfc);
+        if (ofc == null) throw new BusinessException("VAL_002", "ofcCode");
+        return ofc;
+    }
+
+    private static String mcnNo(String v) {
+        String mcn = trimToNull(v);
+        if (mcn == null) throw new BusinessException("VAL_002", "mcnNo");
+        if (mcn.length() > 3 || !mcn.chars().allMatch(Character::isDigit)) throw new BusinessException("VAL_003", "mcnNo");
+        return "0".repeat(3 - mcn.length()) + mcn;
     }
 
     /** 조회조건·검색어 → schData1·2. 저널구분에 없는 조회조건은 VAL_003(As-Is 콤보 setCB_search_if) */

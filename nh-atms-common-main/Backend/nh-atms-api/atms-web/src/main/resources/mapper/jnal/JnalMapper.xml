@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  저널조회(jnal.jnalList) — API 계약 §13. As-Is 저널조회 SQL(AjmList.sql · AjmList_ilm.sql)을 옮김.
+  - 운영 묶음 = TB_JL_JNAL + TB_JL_JNAL_CHK, ILM 묶음(ilm = true) = TB_JL_JNAL_ILM + TB_JL_JNAL_CHK_ILM (기준일은 JnalRules.ilmStart, 잠정 Q-34)
+  - RN = 저널일자·시간·일련번호 내림차순, P_RN = 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번 → 서비스가 As-Is 대로 합친다(JnalRules.merge)
+  - 거래명 = TB_CODE_DTL(CODE_SECT '01') 코드명(As-Is 화면도 같은 표로 채움), 특수 거래명은 서비스(JnalRules.scrNm)
+  - 수표 묶음 B: 수표번호 9번째 바이트가 00 이면 앞 8자리, 14자리로 맞춰 ',' 로 이음(As-Is 그대로)
+  - 바뀐 점: :바인드 → #{}, CHAR 비교 CAST, 인덱스 힌트(TO-BE 인덱스 이름 모름)·스키마 접두어 뺌,
+    수표 묶음은 조회조건이 수표번호일 때만 거름(As-Is 는 계좌·명세표 검색 때 수표 칸이 비었음),
+    수표번호 검색 = 수표 묶음에 걸린 행만(As-Is 본 쿼리에 분기가 없어 0건 — 잠정 Q-36)
+  - ${} 금지
+-->
+<mapper namespace="kr.co.nh.atms.web.jnal.mapper.JnalMapper">
+
+    <sql id="jnalTable">
+        <choose>
+            <when test="ilm">TB_JL_JNAL_ILM</when>
+            <otherwise>TB_JL_JNAL</otherwise>
+        </choose>
+    </sql>
+
+    <sql id="chkTable">
+        <choose>
+            <when test="ilm">TB_JL_JNAL_CHK_ILM</when>
+            <otherwise>TB_JL_JNAL_CHK</otherwise>
+        </choose>
+    </sql>
+
+    <select id="selectList" resultType="kr.co.nh.atms.web.jnal.dto.Jnal">
+        SELECT ROW_NUMBER() OVER (ORDER BY A.JNAL_DT DESC, A.JNAL_TIME DESC, A.JNAL_SEQNO DESC) AS RN,
+               ROW_NUMBER() OVER (PARTITION BY A.JNAL_DT, A.DTLS_SEQNO, DECODE(A.JNAL_TYPE, '22', '00', '33', '00', A.JNAL_TYPE)
+                                  ORDER BY A.JNAL_DT DESC, A.JNAL_TIME DESC, A.JNAL_SEQNO DESC) AS P_RN,
+               A.JNAL_DT,
+               A.JNAL_TIME,
+               A.JNAL_SEQNO,
+               A.OFC_CODE,
+               A.MCN_NO,
+               A.JNAL_TYPE,
+               A.JRNL_PROC_REST,
+               A.DEAL_DATE,
+               A.SCR_NO,
+               (SELECT D.CODE_NM
+                  FROM TB_CODE_DTL D
+                 WHERE D.CODE_SECT = '01'
+                   AND D.CODE = RTRIM(A.SCR_NO)) AS SCR_NM,
+               A.DTLS_SEQNO,
+               A.ACCT_NO,
+               A.ESTB_BANK_CODE,
+               NVL(A.DEAL_AMT, 0) AS DEAL_AMT,
+               A.MDN_TYPE,
+               B.Q_CNT AS CHK_CNT,
+               B.Q_CHK_NO AS CHK_NO,
+               B.Q_CHK_NOS AS CHK_NOS,
+               A.BPR_PROC_STAT,
+               A.FACE_IMG_YN,
+               A.ACPT_IMG_YN,
+               A.CARD_IMG_YN,
+               TRIM(A.BFO_COMT) AS BFO_COMT,
+               TRIM(A.AFT_COMT) AS AFT_COMT
+          FROM <include refid="jnalTable"/> A,
+               (SELECT C.JNAL_DT,
+                       C.OFC_CODE,
+                       C.MCN_NO,
+                       C.JNAL_SEQNO,
+                       MIN(C.CHK_NO) AS Q_CHK_NO,
+                       COUNT(C.CHK_NO) AS Q_CNT,
+                       SUBSTR(REGEXP_REPLACE(
+                                  XMLAGG(XMLELEMENT(TAG, ',' || RPAD(DECODE(RAWTOHEX(SUBSTR(C.CHK_NO, 9, 1)), '00', SUBSTR(C.CHK_NO, 1, 8), C.CHK_NO), 14))
+                                         ORDER BY C.JNAL_DT DESC, C.JNAL_SEQNO DESC, C.SEQNO ASC).GETSTRINGVAL(),
+                                  '&lt;[TAG/]+&gt;', ''), 2) AS Q_CHK_NOS
+                  FROM <include refid="chkTable"/> C
+                 WHERE C.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+                   AND C.MCN_NO = CAST(#{mcnNo} AS CHAR(3))
+                   AND C.JNAL_DT BETWEEN CAST(#{frDt} AS CHAR(8)) AND CAST(#{toDt} AS CHAR(8))
+                <if test='"CHK".equals(field)'>
+                   AND C.CHK_NO LIKE '%' || #{schData1} || '%'
+                </if>
+                 GROUP BY C.JNAL_DT, C.OFC_CODE, C.MCN_NO, C.JNAL_SEQNO) B
+         WHERE A.JNAL_DT = B.JNAL_DT(+)
+           AND A.OFC_CODE = B.OFC_CODE(+)
+           AND A.MCN_NO = B.MCN_NO(+)
+           AND A.JNAL_SEQNO = B.JNAL_SEQNO(+)
+           AND A.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+           AND A.MCN_NO = CAST(#{mcnNo} AS CHAR(3))
+           AND A.JNAL_DT BETWEEN CAST(#{frDt} AS CHAR(8)) AND CAST(#{toDt} AS CHAR(8))
+           AND A.JNAL_TIME BETWEEN CAST(#{frTi} AS CHAR(6)) AND CAST(#{toTi} AS CHAR(6))
+        <if test="jnalType != null">
+           AND A.JNAL_TYPE = #{jnalType}
+        </if>
+        <if test="jrnlProcRest != null">
+           AND A.JRNL_PROC_REST = #{jrnlProcRest}
+        </if>
+        <choose>
+            <when test='"ACCT".equals(field)'>
+           AND A.ACCT_NO LIKE '%' || #{schData1} || '%'
+            </when>
+            <when test='"CHK".equals(field)'>
+           AND B.Q_CNT &gt; 0
+            </when>
+            <when test='"DTLS".equals(field)'>
+                <if test="schData1 != null">
+           AND A.DTLS_SEQNO &gt;= CAST(#{schData1} AS CHAR(4))
+                </if>
+                <if test="schData2 != null">
+           AND A.DTLS_SEQNO &lt;= CAST(#{schData2} AS CHAR(4))
+                </if>
+            </when>
+        </choose>
+         ORDER BY RN
+    </select>
+
+    <select id="selectChecks" resultType="kr.co.nh.atms.web.jnal.dto.JnalCheck">
+        SELECT C.SEQNO,
+               C.CHK_NO
+          FROM <include refid="chkTable"/> C
+         WHERE C.JNAL_DT = CAST(#{jnalDt} AS CHAR(8))
+           AND C.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
+           AND C.MCN_NO = CAST(#{mcnNo} AS CHAR(3))
+           AND C.JNAL_SEQNO = CAST(#{jnalSeqno} AS CHAR(6))
+         ORDER BY C.SEQNO
+    </select>
+
+</mapper>

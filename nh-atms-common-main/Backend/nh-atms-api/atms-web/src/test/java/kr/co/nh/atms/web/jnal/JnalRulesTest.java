@@ -215,6 +215,26 @@ class JnalRulesTest {
     }
 
     @Test
+    void 수표목록_키_정리와_사무소_기간_제한() {
+        kr.co.nh.atms.web.jnal.dto.JnalCheckKey k = new kr.co.nh.atms.web.jnal.dto.JnalCheckKey();
+        k.setJnalDt("20261124");
+        k.setOfcCode("000099");
+        k.setMcnNo("7");
+        k.setJnalSeqno(" 000012 ");
+        JnalRules.normalizeKey(k, "P", false, "80", TODAY);
+        assertThat(k.getOfcCode()).isEqualTo("000080");
+        assertThat(k.getMcnNo()).isEqualTo("007");
+        assertThat(k.getJnalSeqno()).isEqualTo("000012");
+        assertThat(k.isIlm()).isFalse();
+        k.setJnalDt("20260824");
+        assertThat(code(() -> JnalRules.normalizeKey(k, "T", false, "80", TODAY))).isEqualTo("JNL_002");
+        JnalRules.normalizeKey(k, "L", false, "80", TODAY);
+        assertThat(k.isIlm()).isTrue();
+        k.setJnalSeqno(null);
+        assertThat(code(() -> JnalRules.normalizeKey(k, "A", true, "80", TODAY))).isEqualTo("VAL_002");
+    }
+
+    @Test
     void 거래명() {
         assertThat(JnalRules.scrNm("55", "1234", "코드명")).isEqualTo("기기운영관리");
         assertThat(JnalRules.scrNm("00", "9937", "코드명")).isEqualTo("타행이체");
