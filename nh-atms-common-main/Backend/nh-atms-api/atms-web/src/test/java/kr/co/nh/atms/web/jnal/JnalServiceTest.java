@@ -7,7 +7,6 @@ import kr.co.nh.atms.web.jnal.dto.JnalCheck;
 import kr.co.nh.atms.web.jnal.dto.JnalCheckKey;
 import kr.co.nh.atms.web.jnal.dto.JnalSearchDto;
 import kr.co.nh.atms.web.jnal.mapper.JnalMapper;
-import kr.co.nh.atms.web.jnal.service.JnalRules;
 import kr.co.nh.atms.web.jnal.service.JnalService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** 저널조회 서비스 — 운영/ILM 묶음마다 매퍼를 부르고 묶음마다 합친다, 거래명 채움, 수표목록 테이블 고름 */
+/** 저널조회 서비스 — TB_JL_JNAL 한 번 읽고 합친다(ILM 은 2차 파기 조회 화면 몫), 거래명 채움, 수표목록 키 정리 */
 class JnalServiceTest {
 
     private final JnalMapper mapper = mock(JnalMapper.class);
@@ -57,45 +56,40 @@ class JnalServiceTest {
     }
 
     @Test
-    void 기준일을_가로지르면_묶음마다_부르고_운영묶음이_먼저() {
-        String start = JnalRules.ilmStart(Dates.today());
-        String before = Dates.parseYmd(start).minusDays(1).format(Dates.YMD);
-        Jnal op = row("22", 1, "1001", "현금인출");
-        Jnal ilm = row("55", 1, "1234", null);
-        when(mapper.selectList(any())).thenAnswer(inv -> {
-            JnalSearchDto p = inv.getArgument(0);
-            return new ArrayList<>(List.of(p.isIlm() ? ilm : op));
-        });
+    void 기간이_3개월_전에_걸쳐도_TB_JL_JNAL_한번만_부르고_합친다() {
+        LocalDate t = LocalDate.now();
+        String to = t.minusMonths(3).plusDays(1).format(Dates.YMD);
+        String from = t.minusMonths(3).format(Dates.YMD);
+        Jnal a = row("22", 1, "1001", "현금인출");
+        Jnal b = row("33", 2, "9937", null);
+        Jnal c = row("55", 1, "1234", null);
+        when(mapper.selectList(any())).thenReturn(new ArrayList<>(List.of(a, b, c)));
         JnalSearchDto s = new JnalSearchDto();
         s.setOfcCode("000080");
         s.setMcnNo("1");
-        s.setFromDate(before);
-        s.setToDate(start);
+        s.setFromDate(from);
+        s.setToDate(to);
 
         List<Jnal> got = service.search(s);
 
-        ArgumentCaptor<JnalSearchDto> c = ArgumentCaptor.forClass(JnalSearchDto.class);
-        verify(mapper, times(2)).selectList(c.capture());
-        assertThat(c.getAllValues()).extracting(JnalSearchDto::isIlm).containsExactly(false, true);
-        assertThat(got).containsExactly(op, ilm);
-        assertThat(got.get(0).isIlm()).isFalse();
-        assertThat(got.get(1).isIlm()).isTrue();
-        assertThat(got.get(0).getScrNm()).isEqualTo("현금인출");
-        assertThat(got.get(1).getScrNm()).isEqualTo("기기운영관리");
-        assertThat(got.get(0).getRolComts()).containsExactly("전\n후");
+        ArgumentCaptor<JnalSearchDto> cap = ArgumentCaptor.forClass(JnalSearchDto.class);
+        verify(mapper, times(1)).selectList(cap.capture());
+        assertThat(cap.getValue().getFromDate()).isEqualTo(from);
+        assertThat(cap.getValue().getToDate()).isEqualTo(to);
+        assertThat(got).containsExactly(a, c);
+        assertThat(a.getRolComts()).hasSize(2);
+        assertThat(a.getScrNm()).isEqualTo("현금인출");
+        assertThat(c.getScrNm()).isEqualTo("기기운영관리");
     }
 
     @Test
-    void 수표목록은_저널일자로_ILM_테이블을_고른다() {
+    void 수표목록은_키를_정리해서_부른다() {
         when(mapper.selectChecks(any())).thenReturn(List.of(new JnalCheck()));
-        JnalCheckKey old = key(LocalDate.now().minusYears(1).format(Dates.YMD));
-        service.checks(old);
-        JnalCheckKey recent = key(Dates.today());
-        service.checks(recent);
+        service.checks(key(LocalDate.now().minusYears(1).format(Dates.YMD)));
         ArgumentCaptor<JnalCheckKey> c = ArgumentCaptor.forClass(JnalCheckKey.class);
-        verify(mapper, times(2)).selectChecks(c.capture());
-        assertThat(c.getAllValues()).extracting(JnalCheckKey::isIlm).containsExactly(true, false);
-        assertThat(c.getAllValues().get(1).getMcnNo()).isEqualTo("001");
+        verify(mapper).selectChecks(c.capture());
+        assertThat(c.getValue().getMcnNo()).isEqualTo("001");
+        assertThat(c.getValue().getOfcCode()).isEqualTo("000080");
     }
 
     private static JnalCheckKey key(String jnalDt) {

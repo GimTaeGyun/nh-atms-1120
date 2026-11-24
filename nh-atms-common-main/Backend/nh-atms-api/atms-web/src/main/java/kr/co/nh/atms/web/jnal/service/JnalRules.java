@@ -24,7 +24,8 @@ import java.util.regex.Pattern;
  *       TO-BE 승인 방식·기록 테이블이 없어 <b>막기만</b> 한다(잠정 Q-35)</li>
  *   <li>사무소: 권한 A·T·L 은 고른 사무소, 그 밖은 내 사무소(As-Is "T, L 권한 유저에게 사무소 변경 권한 부여", 관리자 A 는 공통 콤보가 엶)</li>
  *   <li>IT부문(내 사무소 {@value #IT_OFC_CODE}) 이고 관리자가 아니면 조회조건(계좌·수표·명세표)을 쓰지 않는다 — As-Is 2020.09 개인정보 조회 제한</li>
- *   <li>ILM: 기준일({@link #ilmStart}) 전 저널은 TB_JL_JNAL_ILM — As-Is {@code chkIlmDate} 원문이 없어 인클루드 주석 '1차파기 = 오늘 − 3개월' 로 잠정(Q-34)</li>
+ *   <li>테이블: TB_JL_JNAL(+_CHK)만 읽는다(2026-11-24 사용자 결정). As-Is 의 ILM 분기({@code chkIlmDate}, 주석 '2차 파기 대상 관련 쿼리 분리')는
+ *       2차 파기(5년) 경계라 위 JNL_001 에 먼저 막힌다 — TB_JL_JNAL_ILM 은 저널 2차 파기 조회 화면 몫(Q-34)</li>
  * </ul>
  */
 public final class JnalRules {
@@ -32,7 +33,7 @@ public final class JnalRules {
 
     /** 한 번에 볼 수 있는 최대 일수(양끝 포함) */
     public static final int MAX_DAYS = 2;
-    /** 1차 파기(= ILM 기준·조회 허가) 개월 수 — 잠정 Q-34·Q-35 */
+    /** 1차 파기(조회 허가) 개월 수 — 잠정 Q-35 */
     public static final int DESTROY1_MONTHS = 3;
     /** 2차 파기 년 수 */
     public static final int DESTROY2_YEARS = 5;
@@ -99,7 +100,7 @@ public final class JnalRules {
         search(s, itRestricted(myOfc, admin));
     }
 
-    /** 수표목록 키 정리 — 사무소·기번·일자 규칙은 목록과 같다(다른 사무소·파기 대상 저널을 키로 직접 읽지 못하게). ilm 은 저널일자로 */
+    /** 수표목록 키 정리 — 사무소·기번·일자 규칙은 목록과 같다(다른 사무소·파기 대상 저널을 키로 직접 읽지 못하게) */
     public static void normalizeKey(JnalCheckKey k, String auth, boolean admin, String myOfc, String today) {
         k.setOfcCode(office(k.getOfcCode(), auth, admin, myOfc));
         k.setMcnNo(mcnNo(k.getMcnNo()));
@@ -112,7 +113,6 @@ public final class JnalRules {
         destroyLimits(dt, auth, admin, today);
         k.setJnalDt(dt);
         k.setJnalSeqno(seq);
-        k.setIlm(isIlm(dt, today));
     }
 
     /** 2차 파기(5년) JNL_001, 1차 파기(3개월) 조회 허가 JNL_002 — 인클루드 chkLim·chkPermitINQ */
@@ -175,33 +175,9 @@ public final class JnalRules {
         return List.of(FIELD_DTLS);
     }
 
-    /** 운영 테이블 첫날(이 날부터 = TB_JL_JNAL, 그 전 = ILM) = 오늘 − 3개월 + 1일 */
-    public static String ilmStart(String today) {
-        return Dates.parseYmd(today).minusMonths(DESTROY1_MONTHS).plusDays(1).format(Dates.YMD);
-    }
-
-    /** 이 날짜의 저널이 ILM 테이블에 있나 */
-    public static boolean isIlm(String jnalDt, String today) {
-        return jnalDt.compareTo(ilmStart(today)) < 0;
-    }
-
-    /** 기간을 운영 묶음 → ILM 묶음 순으로 나눈다(정리된 조건 s 기준) */
-    public static List<JnalSearchDto> split(JnalSearchDto s, String today) {
-        String start = ilmStart(today);
-        String from = s.getFromDate();
-        String to = s.getToDate();
-        List<JnalSearchDto> out = new ArrayList<>(2);
-        if (to.compareTo(start) >= 0) out.add(s.copyFor(from.compareTo(start) >= 0 ? from : start, to, false));
-        if (from.compareTo(start) < 0) {
-            String ilmTo = to.compareTo(start) < 0 ? to : Dates.parseYmd(start).minusDays(1).format(Dates.YMD);
-            out.add(s.copyFor(from, ilmTo, true));
-        }
-        return out;
-    }
-
     /**
      * As-Is rconcat — SQL 순서대로 돌며 저널구분이 55 가 아니고 명세표 안 순번(P_RN)이 1 이 아니면 바로 앞에 남긴 행에 합친다
-     * (인자 글 목록에 '전인자\n후인자', 후인자 목록에 후인자, 거래금액 = 큰 값). 앞에 남긴 행이 없으면 그대로 한 행.
+     * (인자 글 목록에 '전인자\n후인자', 후인자 목록에 후인자, 거래금액 = 큰 값). 앞에 남긴 행이 없으면 그대로 한 행(As-Is 는 이때 오류).
      */
     public static List<Jnal> merge(List<Jnal> rows) {
         List<Jnal> out = new ArrayList<>(rows.size());

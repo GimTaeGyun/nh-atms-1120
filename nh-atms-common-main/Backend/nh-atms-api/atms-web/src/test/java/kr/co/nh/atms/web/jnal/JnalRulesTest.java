@@ -11,10 +11,10 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** 저널조회 규칙 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·ILM 나누기·합치기·거래명 */
+/** 저널조회 규칙 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·합치기·거래명 */
 class JnalRulesTest {
 
-    /** 오늘(고정) — ILM 기준일 20260825, 조회 허가 경계 20260824, 2차 파기 경계 20211124 */
+    /** 오늘(고정) — 조회 허가 경계 20260824, 2차 파기 경계 20211124 */
     private static final String TODAY = "20261124";
 
     private static JnalSearchDto search(String from, String to) {
@@ -175,30 +175,6 @@ class JnalRulesTest {
         return out;
     }
 
-    @Test
-    void 기준일을_가로지르면_두_묶음_운영먼저() {
-        assertThat(JnalRules.ilmStart(TODAY)).isEqualTo("20260825");
-        JnalSearchDto s = search("20260824", "20260825");
-        norm(s);
-        List<JnalSearchDto> parts = JnalRules.split(s, TODAY);
-        assertThat(parts).hasSize(2);
-        assertThat(parts.get(0).isIlm()).isFalse();
-        assertThat(parts.get(0).getFrDt()).isEqualTo("20260825");
-        assertThat(parts.get(0).getToDt()).isEqualTo("20260825");
-        assertThat(parts.get(1).isIlm()).isTrue();
-        assertThat(parts.get(1).getFrDt()).isEqualTo("20260824");
-        assertThat(parts.get(1).getToDt()).isEqualTo("20260824");
-        JnalSearchDto recent = search("20261123", "20261124");
-        norm(recent);
-        assertThat(JnalRules.split(recent, TODAY)).singleElement().satisfies(p -> {
-            assertThat(p.isIlm()).isFalse();
-            assertThat(p.getFrDt()).isEqualTo("20261123");
-        });
-        JnalSearchDto old = search("20260101", "20260102");
-        norm(old);
-        assertThat(JnalRules.split(old, TODAY)).singleElement().satisfies(p -> assertThat(p.isIlm()).isTrue());
-    }
-
     private static Jnal row(String type, int pRn, String bfo, String aft, long amt) {
         Jnal r = new Jnal();
         r.setJnalType(type);
@@ -241,11 +217,9 @@ class JnalRulesTest {
         assertThat(k.getOfcCode()).isEqualTo("000080");
         assertThat(k.getMcnNo()).isEqualTo("007");
         assertThat(k.getJnalSeqno()).isEqualTo("000012");
-        assertThat(k.isIlm()).isFalse();
         k.setJnalDt("20260824");
         assertThat(code(() -> JnalRules.normalizeKey(k, "T", false, "80", TODAY))).isEqualTo("JNL_002");
         JnalRules.normalizeKey(k, "L", false, "80", TODAY);
-        assertThat(k.isIlm()).isTrue();
         k.setJnalSeqno(null);
         assertThat(code(() -> JnalRules.normalizeKey(k, "A", true, "80", TODAY))).isEqualTo("VAL_002");
     }

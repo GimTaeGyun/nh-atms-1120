@@ -62,7 +62,7 @@
    "no": "B2",
    "kind": "new",
    "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalSearchDto.java",
-   "desc": "조회조건 + 서비스가 채우는 값(시간·검색값·묶음 기간·ilm), 묶음 복사 copyFor."
+   "desc": "조회조건 + 서비스가 채우는 값(시간·검색값)."
   },
   {
    "no": "B3",
@@ -80,13 +80,13 @@
    "no": "B5",
    "kind": "new",
    "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheckKey.java",
-   "desc": "수표목록 조건 = 저널 키(ilm 은 서비스가)."
+   "desc": "수표목록 조건 = 저널 키."
   },
   {
    "no": "B6",
    "kind": "new",
    "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalRules.java",
-   "desc": "규칙 한 곳 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·ILM 나누기·합치기·거래명."
+   "desc": "규칙 한 곳 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·합치기·거래명."
   },
   {
    "no": "B7",
@@ -98,13 +98,13 @@
    "no": "B8",
    "kind": "new",
    "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/jnal/JnalMapper.xml",
-   "desc": "As-Is 저널 SQL 이식(운영/ILM 테이블 choose, 수표 묶음, RN·P_RN)."
+   "desc": "As-Is 저널 SQL 이식(TB_JL_JNAL + 수표 묶음, RN·P_RN)."
   },
   {
    "no": "B9",
    "kind": "new",
    "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalService.java",
-   "desc": "묶음마다 SQL → 거래명 → 합치기, 수표목록."
+   "desc": "SQL 한 번 → 거래명 → 합치기, 수표목록."
   },
   {
    "no": "B10",
@@ -122,7 +122,7 @@
    "no": "B12",
    "kind": "new",
    "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalServiceTest.java",
-   "desc": "서비스 시험 2개(묶음·수표 ILM)."
+   "desc": "서비스 시험 2개(한 번 읽고 합침·수표목록 키)."
   },
   {
    "no": "F1",

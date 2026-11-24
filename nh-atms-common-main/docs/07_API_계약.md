@@ -472,7 +472,7 @@ interface UseLogExcelRequest { fileName: string; rowCount: number }
 
 ## 13. 저널조회 (`jnal.jnalList`, 화면 `/jnal/jnal-list`) — 2026-11-24
 
-> 자동화기기 1대의 전자저널(`TB_JL_JNAL`, 기준일 전은 `TB_JL_JNAL_ILM`)을 조회한다. 조회만 — 메뉴 권한 QRY, 사용기록 R 자동. 규칙 한 곳 = 서버 `web/jnal/service/JnalRules.java`(As-Is 저널조회 화면·인클루드 근거).
+> 자동화기기 1대의 전자저널(`TB_JL_JNAL`·`TB_JL_JNAL_CHK`)을 조회한다(ILM 테이블은 읽지 않음 — 저널 2차 파기 조회 화면 몫). 조회만 — 메뉴 권한 QRY, 사용기록 R 자동. 규칙 한 곳 = 서버 `web/jnal/service/JnalRules.java`(As-Is 저널조회 화면·인클루드 근거).
 
 | 메서드 경로 | 요청 | 응답 data | 권한 | 문구 |
 |---|---|---|---|---|
@@ -504,13 +504,12 @@ interface Jnal {
   bfoComt: string | null; aftComt: string | null;                        // 이 행 자신의 전인자·후인자
   rolComts: string[];                 // 롤방식 글 — '전인자\n후인자' 를 합친 저널마다 하나
   dtlComts: string[];                 // 후인자만 — 합친 저널마다 하나
-  ilm: boolean;                       // ILM 테이블에서 읽은 행
 }
 interface JnalCheckKey { jnalDt: string; ofcCode: string; mcnNo: string; jnalSeqno: string }
 interface JnalCheck { seqno: string | null; chkNo: string | null }
 ```
 
-- 합치기(As-Is `rconcat`): SQL 순서(저널일자·시간·일련번호 내림차순)대로 돌며 저널구분이 55 가 아니고 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번이 1 이 아니면 바로 앞에 남긴 행에 합친다. 운영 묶음·ILM 묶음은 따로 합친 뒤 운영 → ILM 순.
-- 기준일: ILM = 오늘 − 3개월 + 1일 전(잠정 Q-34). 2차 파기 = 시작일 ≤ 오늘 − 5년. 조회 허가 = 권한 A·L 이 아니면 시작일 ≤ 오늘 − 3개월 막음(As-Is 는 사유 + 책임자 승인 + 기록, 잠정 Q-35).
+- 합치기(As-Is `rconcat`): SQL 순서(저널일자·시간·일련번호 내림차순)대로 돌며 저널구분이 55 가 아니고 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번이 1 이 아니면 바로 앞에 남긴 행에 합친다.
+- 테이블: `TB_JL_JNAL` 만(2026-11-24 사용자 결정, Q-34 — As-Is ILM 분기는 2차 파기 경계라 아래 5년 제한에 먼저 막힘). 2차 파기 = 시작일 ≤ 오늘 − 5년. 조회 허가 = 권한 A·L 이 아니면 시작일 ≤ 오늘 − 3개월 막음(As-Is 는 사유 + 책임자 승인 + 기록, 잠정 Q-35).
 - IT부문(내 사무소 `000080`)이고 관리자가 아니면 `field`·`keyword` 를 무시한다(As-Is 2020.09 개인정보 조회 제한). 계좌번호 등은 As-Is 대로 원문(사용기록에도 원문, 2026-11-24 사용자 결정).
 

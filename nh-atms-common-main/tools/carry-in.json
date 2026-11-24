@@ -1102,7 +1102,7 @@
    "part": "제12부",
    "summary": [
     "저널조회 화면(jnal.jnalList): 조회조건(공통 필드) → 서버가 합친 저널 목록 20건씩 · 롤방식 보기 · 명세표 팝업(명세서·수표목록·저널)",
-    "백엔드 web/jnal/**(규칙 JnalRules 한 곳) + mapper/jnal/JnalMapper.xml(As-Is SQL, 운영/ILM) + 응답코드 JNL_001·002",
+    "백엔드 web/jnal/**(규칙 JnalRules 한 곳) + mapper/jnal/JnalMapper.xml(As-Is SQL, TB_JL_JNAL 만) + 응답코드 JNL_001·002",
     "공통: 시 단위 시간 범위(hourly)·검색구분 선택지 바꾸기(optionsBy)·계좌번호 하이픈(fmtAcctNo)",
     "DB: 정본 저널 테이블 4개 행·참고 DDL, 메뉴는 메뉴관리 화면에서 경로 /jnal/jnal-list"
    ],
@@ -1141,7 +1141,7 @@
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalSearchDto.java",
-     "조회조건 + 서비스가 채우는 값(시간·검색값·묶음 기간·ilm), 묶음 복사 copyFor."
+     "조회조건 + 서비스가 채우는 값(시간·검색값)."
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/Jnal.java",
@@ -1153,11 +1153,11 @@
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheckKey.java",
-     "수표목록 조건 = 저널 키(ilm 은 서비스가)."
+     "수표목록 조건 = 저널 키."
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalRules.java",
-     "규칙 한 곳 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·ILM 나누기·합치기·거래명."
+     "규칙 한 곳 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·합치기·거래명."
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/mapper/JnalMapper.java",
@@ -1165,11 +1165,11 @@
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/resources/mapper/jnal/JnalMapper.xml",
-     "As-Is 저널 SQL 이식(운영/ILM 테이블 choose, 수표 묶음, RN·P_RN)."
+     "As-Is 저널 SQL 이식(TB_JL_JNAL + 수표 묶음, RN·P_RN)."
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalService.java",
-     "묶음마다 SQL → 거래명 → 합치기, 수표목록."
+     "SQL 한 번 → 거래명 → 합치기, 수표목록."
     ],
     [
      "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/controller/JnalController.java",
@@ -1181,7 +1181,7 @@
     ],
     [
      "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalServiceTest.java",
-     "서비스 시험 2개(묶음·수표 ILM)."
+     "서비스 시험 2개(한 번 읽고 합침·수표목록 키)."
     ],
     [
      "Frontend/nh-atms-web/src/utils/date.ts",

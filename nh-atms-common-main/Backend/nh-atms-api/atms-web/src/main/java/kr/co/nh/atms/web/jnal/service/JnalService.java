@@ -11,12 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 저널조회(jnal.jnalList) — API 계약 §13. 규칙은 JnalRules 한 곳.
- * 기간을 운영/ILM 묶음으로 나눠 묶음마다 SQL → 거래명 채움 → As-Is 대로 합친 뒤 운영 묶음, ILM 묶음 순으로 이어 붙인다(페이지 없음).
+ * 조건 정리 → TB_JL_JNAL 한 번 읽기 → 거래명 채움 → As-Is 대로 합침(페이지 없음). ILM 은 저널 2차 파기 조회 화면 몫.
  */
 @Service
 @RequiredArgsConstructor
@@ -26,18 +25,10 @@ public class JnalService {
     private final JnalMapper mapper;
 
     public List<Jnal> search(JnalSearchDto s) {
-        String today = Dates.today();
-        JnalRules.normalize(s, CurrentUser.auth(), CurrentUser.isAdmin(), CurrentUser.ofcCode(), today);
-        List<Jnal> out = new ArrayList<>();
-        for (JnalSearchDto part : JnalRules.split(s, today)) {
-            List<Jnal> rows = mapper.selectList(part);
-            for (Jnal r : rows) {
-                r.setIlm(part.isIlm());
-                r.setScrNm(JnalRules.scrNm(r.getJnalType(), r.getScrNo(), r.getScrNm()));
-            }
-            out.addAll(JnalRules.merge(rows));
-        }
-        return out;
+        JnalRules.normalize(s, CurrentUser.auth(), CurrentUser.isAdmin(), CurrentUser.ofcCode(), Dates.today());
+        List<Jnal> rows = mapper.selectList(s);
+        for (Jnal r : rows) r.setScrNm(JnalRules.scrNm(r.getJnalType(), r.getScrNo(), r.getScrNm()));
+        return JnalRules.merge(rows);
     }
 
     /** 저널 한 건의 수표 — 상세 팝업 수표목록 탭 */

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/** 저널 수표 한 장 — API 계약 §13 {@code JnalCheck}. TB_JL_JNAL_CHK(또는 _ILM) */
+/** 저널 수표 한 장 — API 계약 §13 {@code JnalCheck}. TB_JL_JNAL_CHK */
 @Getter
 @Setter
 @ToString

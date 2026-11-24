@@ -1,5 +1,5 @@
 /**
- * 저널조회(`jnal.jnalList`, TB_JL_JNAL·_ILM) 타입 — API 계약 §13 과 글자 하나까지 같다.
+ * 저널조회(`jnal.jnalList`, TB_JL_JNAL) 타입 — API 계약 §13 과 글자 하나까지 같다.
  */
 
 /** 저널구분 조건 — 22 일반·33 수표·11 개국·44 합계·55 운영 (응답에는 00 도 있음) */
@@ -56,8 +56,6 @@ export interface Jnal {
   rolComts: string[];
   /** 후인자만 — 합친 저널마다 하나 */
   dtlComts: string[];
-  /** true = ILM 테이블에서 읽은 행 */
-  ilm: boolean;
 }
 
 /** `GET /api/web/jnal/checks` 조건 = 저널 키 */

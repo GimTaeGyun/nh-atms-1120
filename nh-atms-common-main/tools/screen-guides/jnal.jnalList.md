@@ -10,7 +10,7 @@
 
 | 탭·팝업 | 테이블 | 모양(복사 견본) | 하는 일 |
 |---|---|---|---|
-| 화면 — 목록 보기 | `TB_JL_JNAL`(+`_CHK`), 기준일 전 `_ILM` | 사용기록조회(조회 전용) | 조건 → 서버가 합친 전체 목록 → 20건씩 |
+| 화면 — 목록 보기 | `TB_JL_JNAL`(+`_CHK`) | 사용기록조회(조회 전용) | 조건 → 서버가 합친 전체 목록 → 20건씩 |
 | 화면 — 롤방식 보기 | 같은 응답 | (새) 글 상자 | 행마다 인자 글을 '====' 줄로 이어 봄 |
 | 팝업 `popup.jnalView` 명세표 | 목록 행 + `TB_JL_JNAL_CHK` | 사용기록 상세 팝업 + 탭 | 명세서 · 수표목록 · 저널 |
 
@@ -20,22 +20,21 @@
   3. 권한이 A·L 이 아니고 시작일 ≤ 오늘 − 3개월 → `JNL_002`(As-Is 는 사유 + 책임자 승인, 지금은 **막기만** — 잠정 Q-35).
   4. 권한 A·T·L(관리자 포함) = 전체 사무소에서 고름, 그 밖 = 내 사무소(서버도 덮어씀).
   5. IT부문(내 사무소 000080) 비관리자 = 조회조건·검색어 없음(As-Is 2020.09 개인정보 조회 제한).
-  6. 기준일(오늘 − 3개월 + 1일) 전 저널 = ILM 테이블(잠정 Q-34). 기간이 걸치면 두 번 읽고 운영 → ILM 순.
+  6. 테이블은 `TB_JL_JNAL` 만 — As-Is 의 ILM 분기는 2차 파기(5년) 경계라 2번에서 먼저 막힌다. ILM 은 저널 2차 파기 조회 화면 몫(Q-34).
   7. 같은 날·같은 명세표의 저널(22·33 은 00 으로 봄)은 **앞 행에 합침**(As-Is rconcat) — 인자 글 목록, 금액은 큰 값.
   8. 개인정보(계좌번호·인자 글)는 As-Is 대로 원문(사용기록에도 원문).
 
 ```text
 [화면] 조회조건 ─ GET /api/web/jnal ─▶ JnalController(QRY) ─▶ JnalService
                                             JnalRules.normalize(필수·2일·5년·조회허가·사무소·IT부문)
-                                            JnalRules.split → 운영 묶음 / ILM 묶음
-                                              └▶ JnalMapper.selectList ×(1~2) ─▶ [TB_JL_JNAL(_ILM) + TB_JL_JNAL_CHK(_ILM) + TB_CODE_DTL '01']
+                                              └▶ JnalMapper.selectList ─▶ [TB_JL_JNAL + TB_JL_JNAL_CHK + TB_CODE_DTL '01']
                                             거래명(JnalRules.scrNm) → 합치기(JnalRules.merge)
 [화면] ◀── Jnal[] (페이지 없음) ── 목록 20건씩 / 롤방식 / [상세] → 명세표 팝업 ─ GET /api/web/jnal/checks ─▶ 수표목록
 ```
 
 ## 1. 준비 — DB
 
-- 테이블 4개는 **정본 CSV 행**으로 만든 참고 DDL(`db/ddl/TB_JL_JNAL*.sql`). 개발 DB 에 있는지 `db/check/01_exists.sql`·`02_columns.sql` 로 먼저 본다.
+- 테이블 4개는 **정본 CSV 행**으로 만든 참고 DDL(`db/ddl/TB_JL_JNAL*.sql`). 이 화면이 읽는 것은 `TB_JL_JNAL`·`TB_JL_JNAL_CHK` 2개(`_ILM` 2개는 2차 파기 조회 화면용). 개발 DB 에 있는지 `db/check/01_exists.sql`·`02_columns.sql` 로 먼저 본다.
 - **행이 있어야 화면에 나온다**: 업체 수집 모듈(atms-journal)은 지금 `T_JOURNAL` 에 쓴다 → `TB_JL_JNAL` 에 행이 없으면 늘 0건(Q-39). 거래명은 `TB_CODE_DTL` 코드구분 `'01'` 행이 있어야 보인다.
 - 메뉴: **메뉴관리 화면**에서 저널 대·중메뉴 아래에 소메뉴를 만들고 메뉴경로 `/jnal/jnal-list` 를 넣는다(SQL 파일 없음, 2026-11-24 사용자 결정). 권한은 권한관리 → 메뉴 권한 탭에서 '조회'.
 
@@ -95,7 +94,7 @@
 ## 5. 백엔드 요약
 
 - `JnalController` — `selectList`·`selectChecks`, 둘 다 QRY. 사용기록 R 은 자동.
-- `JnalService` — `JnalRules.normalize` → `split` → 묶음마다 `selectList` → `scrNm` → `merge`. 수표목록은 `normalizeKey`(같은 사무소·기간 규칙) 후 `selectChecks`.
+- `JnalService` — `JnalRules.normalize` → `selectList` 한 번 → `scrNm` → `merge`. 수표목록은 `normalizeKey`(같은 사무소·기간 규칙) 후 `selectChecks`.
 - `JnalMapper.xml` — As-Is SQL 이식. 바뀐 점: `#{}`·`CAST(… AS CHAR(n))`, 인덱스 힌트·스키마 접두어 뺌, 수표 묶음은 조회조건이 수표번호일 때만 거름, 수표번호 검색 = 수표 묶음에 걸린 행(Q-36).
 
 ## 6. 검사

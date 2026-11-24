@@ -10,7 +10,7 @@ import { acctLines, amountText, hasDetail, jnalTypeText, opText, procRestText } 
 /** 화면에서 쓰는 행 = 응답 행 + 순번·키(화면 페이징이라 순번을 미리 붙임) */
 export type JnalRow = Jnal & { no: number; key: string };
 
-export const toRows = (rows: Jnal[]): JnalRow[] => rows.map((r, i) => ({ ...r, no: i + 1, key: `${r.ilm ? 'I' : 'O'}${r.jnalDt}${r.jnalSeqno}` }));
+export const toRows = (rows: Jnal[]): JnalRow[] => rows.map((r, i) => ({ ...r, no: i + 1, key: `${r.jnalDt}${r.jnalSeqno}` }));
 
 export const jnalColumns = (onDetail: (r: JnalRow) => void): Col<JnalRow>[] => [
   centerCol<JnalRow>('순번', 'no', 60),

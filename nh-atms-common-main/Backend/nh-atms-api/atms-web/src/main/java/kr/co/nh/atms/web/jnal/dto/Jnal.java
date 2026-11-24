@@ -8,7 +8,7 @@ import lombok.ToString;
 import java.util.List;
 
 /**
- * 저널 한 행 — API 계약 §13 {@code Jnal}. TB_JL_JNAL(또는 _ILM) + 수표 묶음(TB_JL_JNAL_CHK) + 거래명(TB_CODE_DTL '01').
+ * 저널 한 행 — API 계약 §13 {@code Jnal}. TB_JL_JNAL + 수표 묶음(TB_JL_JNAL_CHK) + 거래명(TB_CODE_DTL '01').
  * 같은 명세표의 여러 저널은 서버가 한 행으로 합친다(JnalRules.merge) — 인자 글은 rolComts·dtlComts 목록.
  */
 @Getter
@@ -49,8 +49,6 @@ public class Jnal {
     private List<String> rolComts;
     /** 후인자만 — 합친 저널마다 하나 */
     private List<String> dtlComts;
-    /** true = ILM 테이블에서 읽은 행 */
-    private boolean ilm;
 
     /** SQL 순번·명세표 안 순번(합치기에만 씀, 응답에서 뺌) */
     @JsonIgnore

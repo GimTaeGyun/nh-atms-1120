@@ -2,8 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!--
-  저널조회(jnal.jnalList) — API 계약 §13. As-Is 저널조회 SQL(AjmList.sql · AjmList_ilm.sql)을 옮김.
-  - 운영 묶음 = TB_JL_JNAL + TB_JL_JNAL_CHK, ILM 묶음(ilm = true) = TB_JL_JNAL_ILM + TB_JL_JNAL_CHK_ILM (기준일은 JnalRules.ilmStart, 잠정 Q-34)
+  저널조회(jnal.jnalList) — API 계약 §13. As-Is 저널조회 SQL(AjmList.sql)을 옮김.
+  - TB_JL_JNAL + TB_JL_JNAL_CHK 만(2026-11-24 사용자 결정 — As-Is 의 ILM 분기는 2차 파기(5년) 경계라 이 화면에선 쓰지 않음, Q-34)
   - RN = 저널일자·시간·일련번호 내림차순, P_RN = 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번 → 서비스가 As-Is 대로 합친다(JnalRules.merge)
   - 거래명 = TB_CODE_DTL(CODE_SECT '01') 코드명(As-Is 화면도 같은 표로 채움), 특수 거래명은 서비스(JnalRules.scrNm)
   - 수표 묶음 B: 수표번호 9번째 바이트가 00 이면 앞 8자리, 14자리로 맞춰 ',' 로 이음(As-Is 그대로)
@@ -13,20 +13,6 @@
   - ${} 금지
 -->
 <mapper namespace="kr.co.nh.atms.web.jnal.mapper.JnalMapper">
-
-    <sql id="jnalTable">
-        <choose>
-            <when test="ilm">TB_JL_JNAL_ILM</when>
-            <otherwise>TB_JL_JNAL</otherwise>
-        </choose>
-    </sql>
-
-    <sql id="chkTable">
-        <choose>
-            <when test="ilm">TB_JL_JNAL_CHK_ILM</when>
-            <otherwise>TB_JL_JNAL_CHK</otherwise>
-        </choose>
-    </sql>
 
     <select id="selectList" resultType="kr.co.nh.atms.web.jnal.dto.Jnal">
         SELECT ROW_NUMBER() OVER (ORDER BY A.JNAL_DT DESC, A.JNAL_TIME DESC, A.JNAL_SEQNO DESC) AS RN,
@@ -59,7 +45,7 @@
                A.CARD_IMG_YN,
                TRIM(A.BFO_COMT) AS BFO_COMT,
                TRIM(A.AFT_COMT) AS AFT_COMT
-          FROM <include refid="jnalTable"/> A,
+          FROM TB_JL_JNAL A,
                (SELECT C.JNAL_DT,
                        C.OFC_CODE,
                        C.MCN_NO,
@@ -70,10 +56,10 @@
                                   XMLAGG(XMLELEMENT(TAG, ',' || RPAD(DECODE(RAWTOHEX(SUBSTR(C.CHK_NO, 9, 1)), '00', SUBSTR(C.CHK_NO, 1, 8), C.CHK_NO), 14))
                                          ORDER BY C.JNAL_DT DESC, C.JNAL_SEQNO DESC, C.SEQNO ASC).GETSTRINGVAL(),
                                   '&lt;[TAG/]+&gt;', ''), 2) AS Q_CHK_NOS
-                  FROM <include refid="chkTable"/> C
+                  FROM TB_JL_JNAL_CHK C
                  WHERE C.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
                    AND C.MCN_NO = CAST(#{mcnNo} AS CHAR(3))
-                   AND C.JNAL_DT BETWEEN CAST(#{frDt} AS CHAR(8)) AND CAST(#{toDt} AS CHAR(8))
+                   AND C.JNAL_DT BETWEEN CAST(#{fromDate} AS CHAR(8)) AND CAST(#{toDate} AS CHAR(8))
                 <if test='"CHK".equals(field)'>
                    AND C.CHK_NO LIKE '%' || #{schData1} || '%'
                 </if>
@@ -84,7 +70,7 @@
            AND A.JNAL_SEQNO = B.JNAL_SEQNO(+)
            AND A.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
            AND A.MCN_NO = CAST(#{mcnNo} AS CHAR(3))
-           AND A.JNAL_DT BETWEEN CAST(#{frDt} AS CHAR(8)) AND CAST(#{toDt} AS CHAR(8))
+           AND A.JNAL_DT BETWEEN CAST(#{fromDate} AS CHAR(8)) AND CAST(#{toDate} AS CHAR(8))
            AND A.JNAL_TIME BETWEEN CAST(#{frTi} AS CHAR(6)) AND CAST(#{toTi} AS CHAR(6))
         <if test="jnalType != null">
            AND A.JNAL_TYPE = #{jnalType}
@@ -114,7 +100,7 @@
     <select id="selectChecks" resultType="kr.co.nh.atms.web.jnal.dto.JnalCheck">
         SELECT C.SEQNO,
                C.CHK_NO
-          FROM <include refid="chkTable"/> C
+          FROM TB_JL_JNAL_CHK C
          WHERE C.JNAL_DT = CAST(#{jnalDt} AS CHAR(8))
            AND C.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
            AND C.MCN_NO = CAST(#{mcnNo} AS CHAR(3))
