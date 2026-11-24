@@ -52,6 +52,8 @@ export const SCREENS: Record<string, ScreenDef> = Object.fromEntries(
     def('sample.menuMgt', '메뉴관리', () => import('./sample/MenuMgtPage')),
     def('sample.codeMgt', '코드관리', () => import('./sample/CodeMgtPage')),
     def('sample.useLog', '사용기록조회', () => import('./sample/UseLogPage')),
+    // ---- 저널(jnal) ----
+    def('jnal.jnalList', '저널 조회', () => import('./jnal/JnalListPage')),
   ].map((d) => [d.key, d]),
 );
 
