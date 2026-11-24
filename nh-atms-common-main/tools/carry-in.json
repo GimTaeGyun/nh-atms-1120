@@ -1095,6 +1095,143 @@
      "3단계 가지치기 시험(SQL 글자 확인 시험은 삭제)."
     ]
    ]
+  },
+  {
+   "no": 12,
+   "name": "저널조회",
+   "part": "제12부",
+   "summary": [
+    "저널조회 화면(jnal.jnalList): 조회조건(공통 필드) → 서버가 합친 저널 목록 20건씩 · 롤방식 보기 · 명세표 팝업(명세서·수표목록·저널)",
+    "백엔드 web/jnal/**(규칙 JnalRules 한 곳) + mapper/jnal/JnalMapper.xml(As-Is SQL, 운영/ILM) + 응답코드 JNL_001·002",
+    "공통: 시 단위 시간 범위(hourly)·검색구분 선택지 바꾸기(optionsBy)·계좌번호 하이픈(fmtAcctNo)",
+    "DB: 정본 저널 테이블 4개 행·참고 DDL, 메뉴는 메뉴관리 화면에서 경로 /jnal/jnal-list"
+   ],
+   "files": [
+    [
+     "db/ddl/_source_columns.csv",
+     "정본 CSV(nh-atms 20_TOBE컬럼정의서) 행 — TB_JL_JNAL·_CHK·_ILM·_CHK_ILM 96줄(중복 인쇄는 한 벌)."
+    ],
+    [
+     "db/ddl/_source_entities.csv",
+     "정본 엔터티 행 4줄."
+    ],
+    [
+     "db/tools/gen_ddl.py",
+     "TABLES 에 4테이블."
+    ],
+    [
+     "db/ddl/TB_JL_JNAL.sql",
+     "참고 DDL(생성물)."
+    ],
+    [
+     "db/ddl/TB_JL_JNAL_CHK.sql",
+     "참고 DDL(생성물)."
+    ],
+    [
+     "db/ddl/TB_JL_JNAL_ILM.sql",
+     "참고 DDL(생성물)."
+    ],
+    [
+     "db/ddl/TB_JL_JNAL_CHK_ILM.sql",
+     "참고 DDL(생성물)."
+    ],
+    [
+     "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+     "오류 문구 JNL_001(2차 파기)·JNL_002(3개월 조회 허가) 두 줄."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalSearchDto.java",
+     "조회조건 + 서비스가 채우는 값(시간·검색값·묶음 기간·ilm), 묶음 복사 copyFor."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/Jnal.java",
+     "저널 한 행(합친 인자 글 rolComts·dtlComts, 내부 rn·pRn 은 응답에서 뺌)."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheck.java",
+     "수표 한 장(일련번호·수표번호)."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheckKey.java",
+     "수표목록 조건 = 저널 키(ilm 은 서비스가)."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalRules.java",
+     "규칙 한 곳 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·ILM 나누기·합치기·거래명."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/mapper/JnalMapper.java",
+     "매퍼 — selectList·selectChecks."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/resources/mapper/jnal/JnalMapper.xml",
+     "As-Is 저널 SQL 이식(운영/ILM 테이블 choose, 수표 묶음, RN·P_RN)."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalService.java",
+     "묶음마다 SQL → 거래명 → 합치기, 수표목록."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/controller/JnalController.java",
+     "GET /api/web/jnal, /api/web/jnal/checks (QRY, 사용기록 R)."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalRulesTest.java",
+     "규칙 시험 13개."
+    ],
+    [
+     "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalServiceTest.java",
+     "서비스 시험 2개(묶음·수표 ILM)."
+    ],
+    [
+     "Frontend/nh-atms-web/src/utils/date.ts",
+     "공통 hourOptions(시 단위 옵션)."
+    ],
+    [
+     "Frontend/nh-atms-web/src/utils/format.ts",
+     "공통 fmtAcctNo(계좌번호 하이픈)."
+    ],
+    [
+     "Frontend/nh-atms-web/src/components/search/fields.tsx",
+     "TimeRangeSelect·timeRangeField 에 hourly."
+    ],
+    [
+     "Frontend/nh-atms-web/src/components/search/optionFields.tsx",
+     "keywordTypeFields 에 optionsBy·keywordPlaceholder."
+    ],
+    [
+     "Frontend/nh-atms-web/src/domain/jnal.ts",
+     "타입(계약 §13)."
+    ],
+    [
+     "Frontend/nh-atms-web/src/api/endpoints/jnal.ts",
+     "jnalApi·jnalKeys."
+    ],
+    [
+     "Frontend/nh-atms-web/src/screens/screenIds.ts",
+     "화면키 jnal.jnalList·popup.jnalView."
+    ],
+    [
+     "Frontend/nh-atms-web/src/screens/jnal/JnalListParts.tsx",
+     "선택지·표시 글자·조회조건·파라미터·롤방식 글·명세서 항목."
+    ],
+    [
+     "Frontend/nh-atms-web/src/screens/jnal/JnalListColumns.tsx",
+     "목록 11칸."
+    ],
+    [
+     "Frontend/nh-atms-web/src/screens/popup/JnalViewModal.tsx",
+     "명세표 팝업(명세서·수표목록·저널)."
+    ],
+    [
+     "Frontend/nh-atms-web/src/screens/jnal/JnalListPage.tsx",
+     "화면 본체."
+    ],
+    [
+     "Frontend/nh-atms-web/src/screens/registry.ts",
+     "화면 등록 한 줄(F11 다음)."
+    ]
+   ]
   }
  ],
  "order": [

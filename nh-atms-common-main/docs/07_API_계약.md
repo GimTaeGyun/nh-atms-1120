@@ -184,6 +184,8 @@ McnModel extends Audit { vendCode: string; vendNm?: string | null; mcnType: stri
 | `NTC_002` | E | 본인이 쓴 공지만 수정·삭제할 수 있습니다. (403) |
 | `NTC_003` | E | 전체 공지와 다른 사무소 공지는 관리자만 등록할 수 있습니다. (403) |
 | `DSH_001` | E | 조회할 수 없는 사무소입니다. ({0}) (403, 대시보드 범위 밖) |
+| `JNL_001` | E | 2차 파기 대상 저널은 조회할 수 없습니다. {0} 이후 기간으로 조회하시고, 2차 파기 대상은 저널 2차 파기 조회 화면을 이용하세요. |
+| `JNL_002` | E | 1차 파기 대상({0} 이전) 저널은 조회사유 등록과 책임자 승인이 필요합니다. 지금은 권한 A·L 만 조회할 수 있습니다. (잠정 Q-35) |
 | `CDM_001` | E | 코드구분을 찾을 수 없습니다. ({0}) (404) |
 | `CDM_002` | E | 상세코드가 있는 코드구분은 삭제할 수 없습니다. ({0}) |
 | `CDM_003` | E | 이미 있는 코드구분입니다. ({0}) |
@@ -467,3 +469,48 @@ interface UseLogExcelRequest { fileName: string; rowCount: number }
 
 - 보이는 범위(서버 `web/uselog/service/UseLogRules.java`): 관리자 = 모든 사무소(사무소 칸으로 거름), 그 밖 = 내 권한 사무소 기록만(권한 사무소가 없으면 0건). 상세도 같은 규칙(다른 사무소면 404).
 - 엑셀 기록: 프론트 공통 `utils/excel.ts downloadExcel` 이 내려받기 직전에 부른다(사유 없음, 2026-11-17 사용자 결정). 화면은 `X-Screen-Key` 헤더로 안다. 실패해도 내려받기는 계속.
+
+## 13. 저널조회 (`jnal.jnalList`, 화면 `/jnal/jnal-list`) — 2026-11-24
+
+> 자동화기기 1대의 전자저널(`TB_JL_JNAL`, 기준일 전은 `TB_JL_JNAL_ILM`)을 조회한다. 조회만 — 메뉴 권한 QRY, 사용기록 R 자동. 규칙 한 곳 = 서버 `web/jnal/service/JnalRules.java`(As-Is 저널조회 화면·인클루드 근거).
+
+| 메서드 경로 | 요청 | 응답 data | 권한 | 문구 |
+|---|---|---|---|---|
+| `GET /api/web/jnal` | `JnalSearch` | `Jnal[]`(페이지 없음, 최근 순, 같은 명세표는 합친 한 행) | QRY | 필수 없음 `VAL_002`, 형식·조회조건 `VAL_003`, 순서·2일 넘음 `VAL_001`, 5년 `JNL_001`, 3개월 조회 허가 `JNL_002` |
+| `GET /api/web/jnal/checks` | `JnalCheckKey` | `JnalCheck[]`(일련번호 순) | QRY | 목록과 같은 사무소·기간 규칙 |
+
+```ts
+interface JnalSearch {
+  ofcCode: string;                    // 필수. 권한 A·T·L(관리자 포함)만 고름, 그 밖은 서버가 내 사무소로 덮어씀
+  mcnNo: string;                      // 필수(3자리로 채움)
+  fromDate: string; toDate: string;   // 저널일자 YYYYMMDD 필수, 최대 2일(양끝 포함)
+  fromTime?: string; toTime?: string; // HHmm(비면 0000~2359) — 서버가 시작 00초·끝 59초를 붙임
+  jnalType?: '22' | '33' | '11' | '44' | '55';          // 일반·수표·개국·합계·운영(비면 전체)
+  jrnlProcRest?: '01' | '02' | '97' | '98' | '99';      // 정상·불능·취소정상·취소불능·확인요망
+  field?: 'ACCT' | 'CHK' | 'DTLS';    // 계좌번호·수표번호·명세표일련번호 — 저널구분에 없는 값은 VAL_003(전체·33 = 셋, 22 = 계좌·명세표, 11·44·55 = 명세표)
+  keyword?: string;                   // 계좌·수표 = 부분일치(영문·숫자·-), 명세표 = '0001-0050' · '-0050' · '0001-' · 번호 하나(그 번호만)
+}
+interface Jnal {
+  jnalDt: string; jnalTime: string | null; jnalSeqno: string; ofcCode: string; mcnNo: string;
+  jnalType: string | null;            // 00·22·33 거래, 11 개국, 44 합계, 55 운영
+  jrnlProcRest: string | null;        // 01 정상·02 불능·97 취소정상·98 취소불능·99 확인요망·77 고객조작취소
+  dealDate: string | null; scrNo: string | null;
+  scrNm: string | null;               // 55 = 기기운영관리, 9927·9937·9947·9957 = 타행이체, 9929·9939·9949·9959 = 타행이체조회, 그 밖 TB_CODE_DTL(CODE_SECT '01') 코드명
+  dtlsSeqno: string | null; acctNo: string | null; estbBankCode: string | null;
+  dealAmt: number | null;             // 합친 행 = 가장 큰 금액
+  mdnType: string | null;
+  chkCnt: number | null; chkNo: string | null; chkNos: string | null;   // TB_JL_JNAL_CHK 묶음(14자리씩 ',' 로 이음)
+  bprProcStat: string | null; faceImgYn: string | null; acptImgYn: string | null; cardImgYn: string | null;
+  bfoComt: string | null; aftComt: string | null;                        // 이 행 자신의 전인자·후인자
+  rolComts: string[];                 // 롤방식 글 — '전인자\n후인자' 를 합친 저널마다 하나
+  dtlComts: string[];                 // 후인자만 — 합친 저널마다 하나
+  ilm: boolean;                       // ILM 테이블에서 읽은 행
+}
+interface JnalCheckKey { jnalDt: string; ofcCode: string; mcnNo: string; jnalSeqno: string }
+interface JnalCheck { seqno: string | null; chkNo: string | null }
+```
+
+- 합치기(As-Is `rconcat`): SQL 순서(저널일자·시간·일련번호 내림차순)대로 돌며 저널구분이 55 가 아니고 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번이 1 이 아니면 바로 앞에 남긴 행에 합친다. 운영 묶음·ILM 묶음은 따로 합친 뒤 운영 → ILM 순.
+- 기준일: ILM = 오늘 − 3개월 + 1일 전(잠정 Q-34). 2차 파기 = 시작일 ≤ 오늘 − 5년. 조회 허가 = 권한 A·L 이 아니면 시작일 ≤ 오늘 − 3개월 막음(As-Is 는 사유 + 책임자 승인 + 기록, 잠정 Q-35).
+- IT부문(내 사무소 `000080`)이고 관리자가 아니면 `field`·`keyword` 를 무시한다(As-Is 2020.09 개인정보 조회 제한). 계좌번호 등은 As-Is 대로 원문(사용기록에도 원문, 2026-11-24 사용자 결정).
+

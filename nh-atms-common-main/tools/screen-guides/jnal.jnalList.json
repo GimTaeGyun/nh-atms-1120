@@ -1,0 +1,200 @@
+{
+ "order": 12,
+ "screenKey": "jnal.jnalList",
+ "title": "저널조회",
+ "body": "jnal.jnalList.md",
+ "base": "1910cb6",
+ "groups": {
+  "D": "DB",
+  "B": "백엔드",
+  "F": "프론트"
+ },
+ "steps": [
+  {
+   "no": "D1",
+   "kind": "diff",
+   "path": "db/ddl/_source_columns.csv",
+   "desc": "정본 CSV(nh-atms 20_TOBE컬럼정의서) 행 — TB_JL_JNAL·_CHK·_ILM·_CHK_ILM 96줄(중복 인쇄는 한 벌)."
+  },
+  {
+   "no": "D2",
+   "kind": "diff",
+   "path": "db/ddl/_source_entities.csv",
+   "desc": "정본 엔터티 행 4줄."
+  },
+  {
+   "no": "D3",
+   "kind": "diff",
+   "path": "db/tools/gen_ddl.py",
+   "desc": "TABLES 에 4테이블."
+  },
+  {
+   "no": "D4",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "D5",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL_CHK.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "D6",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL_ILM.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "D7",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL_CHK_ILM.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "B1",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+   "desc": "오류 문구 JNL_001(2차 파기)·JNL_002(3개월 조회 허가) 두 줄."
+  },
+  {
+   "no": "B2",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalSearchDto.java",
+   "desc": "조회조건 + 서비스가 채우는 값(시간·검색값·묶음 기간·ilm), 묶음 복사 copyFor."
+  },
+  {
+   "no": "B3",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/Jnal.java",
+   "desc": "저널 한 행(합친 인자 글 rolComts·dtlComts, 내부 rn·pRn 은 응답에서 뺌)."
+  },
+  {
+   "no": "B4",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheck.java",
+   "desc": "수표 한 장(일련번호·수표번호)."
+  },
+  {
+   "no": "B5",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheckKey.java",
+   "desc": "수표목록 조건 = 저널 키(ilm 은 서비스가)."
+  },
+  {
+   "no": "B6",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalRules.java",
+   "desc": "규칙 한 곳 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·ILM 나누기·합치기·거래명."
+  },
+  {
+   "no": "B7",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/mapper/JnalMapper.java",
+   "desc": "매퍼 — selectList·selectChecks."
+  },
+  {
+   "no": "B8",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/jnal/JnalMapper.xml",
+   "desc": "As-Is 저널 SQL 이식(운영/ILM 테이블 choose, 수표 묶음, RN·P_RN)."
+  },
+  {
+   "no": "B9",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalService.java",
+   "desc": "묶음마다 SQL → 거래명 → 합치기, 수표목록."
+  },
+  {
+   "no": "B10",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/controller/JnalController.java",
+   "desc": "GET /api/web/jnal, /api/web/jnal/checks (QRY, 사용기록 R)."
+  },
+  {
+   "no": "B11",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalRulesTest.java",
+   "desc": "규칙 시험 13개."
+  },
+  {
+   "no": "B12",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalServiceTest.java",
+   "desc": "서비스 시험 2개(묶음·수표 ILM)."
+  },
+  {
+   "no": "F1",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/utils/date.ts",
+   "desc": "공통 hourOptions(시 단위 옵션)."
+  },
+  {
+   "no": "F2",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/utils/format.ts",
+   "desc": "공통 fmtAcctNo(계좌번호 하이픈)."
+  },
+  {
+   "no": "F3",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/fields.tsx",
+   "desc": "TimeRangeSelect·timeRangeField 에 hourly."
+  },
+  {
+   "no": "F4",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/optionFields.tsx",
+   "desc": "keywordTypeFields 에 optionsBy·keywordPlaceholder."
+  },
+  {
+   "no": "F5",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/domain/jnal.ts",
+   "desc": "타입(계약 §13)."
+  },
+  {
+   "no": "F6",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/api/endpoints/jnal.ts",
+   "desc": "jnalApi·jnalKeys."
+  },
+  {
+   "no": "F7",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/screenIds.ts",
+   "desc": "화면키 jnal.jnalList·popup.jnalView."
+  },
+  {
+   "no": "F8",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/jnal/JnalListParts.tsx",
+   "desc": "선택지·표시 글자·조회조건·파라미터·롤방식 글·명세서 항목."
+  },
+  {
+   "no": "F9",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/jnal/JnalListColumns.tsx",
+   "desc": "목록 11칸."
+  },
+  {
+   "no": "F10",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/popup/JnalViewModal.tsx",
+   "desc": "명세표 팝업(명세서·수표목록·저널)."
+  },
+  {
+   "no": "F11",
+   "kind": "new",
+   "path": "Frontend/nh-atms-web/src/screens/jnal/JnalListPage.tsx",
+   "desc": "화면 본체."
+  },
+  {
+   "no": "F12",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/screens/registry.ts",
+   "desc": "화면 등록 한 줄(F11 다음)."
+  }
+ ]
+}
