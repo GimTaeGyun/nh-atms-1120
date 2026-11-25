@@ -344,7 +344,7 @@ PC `Common-ATMS-main\deploy\webtob\http.m.atms-jsv.txt` — **WAS 담당에게 �
 
 | 파일 | 줄 | 지금 | 바꿀 값 |
 |---|---|---|---|
-| `Backend\nh-atms-api\atms-web\src\main\resources\application-jeus.yml` | 25 | `    per-no: CHANGE_ME` | `    per-no: <화면 고정 사용자 개인번호>` — WAS 담당이 atms01 JVM 옵션 `-Datms.fixed-user.per-no=…` 를 넣어 주면 고치지 않아도 됨. 둘 다 없으면 화면 `/api/**` 전부 401 `ME_001` |
+| `Frontend\nh-atms-web\src\screens\login\testAccounts.ts` | `CHANGE_ME_1`~`6` | `CHANGE_ME_1` … | (선택) 로그인 화면 옆 테스트 계정 개인번호. 2026-11-11 로그인 필수로 바뀌어 예전 `application-jeus.yml` `per-no`(고정 사용자)·JVM 옵션 `-Datms.fixed-user.per-no` 는 **없앰** — 넣을 필요 없음. 비워 두어도 로그인 화면에 개인번호를 직접 치면 들어간다 |
 | `Backend\nh-atms-api\atms-common\src\main\resources\jeus-common.yml` | 6-1 ② 의 `host: CHANGE_ME_L4_VIP` | | **지금은 그대로** — L4 VIP 를 받으면 (에이전트 연결 단계) |
 
 - JNDI 이름이 `dsATMS01` 이 아니면 같은 `jeus-common.yml` 의 `jndi-name` 한 곳만 바꾼다 (POST_HANDOVER_EDITS G)
@@ -378,7 +378,7 @@ PRE_CARRYIN_CHECK 4장 순서대로 `git add -A` → `git commit -m "업무 모�
 - 로그에 `Started` 가 없고 모든 주소 404 → JEUS Jakarta 미지원 의심 (INFRA_MANUAL 10-5)
 - `[field-crypto] … 키 파일이 없습니다` → 4단계 keys
 - `NameNotFoundException … dsATMS01` → WAS 담당 (T63)
-- `ME_001` → 6-2 개인번호
+- 로그인 전 `ME_002` 는 정상(2026-11-11 로그인 필수). 로그인 실패 `LGN_001`·로그인 뒤 `ME_001` → 그 개인번호가 `TB_INSA` 에 있는지
 
 ## 되돌리기 한눈에
 

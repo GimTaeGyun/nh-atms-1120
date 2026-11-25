@@ -12,7 +12,7 @@
 | 2 | DB: 새 앱 `TB_` 테이블 확인·생성 요청·시드 | 우리 + DB 담당 | `03_seed_status` = 5 / 15 / 5 |
 | 3 | DB: NH-ATMS 5개 모듈의 `T_` 테이블·배치 메타 | DB 담당 결정 | `T_BATCH_JOB`·`BATCH_JOB_INSTANCE` 등 있음 |
 | 4 | 로컬 PC 에서 DB 연결 먼저 확인 | 우리 | 로컬 `/api/web/me` 에 이름 |
-| 5 | 내부 Gitea 소스: 5개 모듈용 공통 보강·개인번호 | 우리 | Jenkins `build-only` WAR 6개 |
+| 5 | 내부 Gitea 소스: 5개 모듈용 공통 보강·로그인 테스트 계정 개인번호(선택) | 우리 | Jenkins `build-only` WAR 6개 |
 | 6 | 백엔드 배포 (atms-web → 4개 → batch) | Jenkins | 로그 `Started Atms…Application` 6개 |
 | 7 | 화면 배포 | Jenkins | `http://16.88.122.112:9000/` 200 |
 | 8 | DB 시험 (API·화면) | 우리 | 아래 8장 표 모두 정상 |
@@ -29,7 +29,6 @@
 | WAS | 데이터소스 **`dsATMS01`** = Oracle 16.88.250.91:1531 NBATMSTP ATMS_APP, **대상 6개 서버**, JEUS 라이브러리에 Oracle JDBC + **orai18n** | 앱은 JNDI 만 씀 (WAR 에 DB 비밀번호 없음) | 앱 로그에 `NameNotFoundException` 없음 |
 | WAS | 앱 로그 폴더 `/WASlogs/jeusATMSlogs/nbatmsltws01/app` (jeusatms 쓰기, jeus 그룹 읽기) | 2026-11-09 없음. 배포 스크립트가 이 로그로 기동 확인 | `ls -ld /WASlogs/jeusATMSlogs/nbatmsltws01/app` |
 | WAS | 6개 서버 앱 경로 = `/home/atmswas/catms`·`cajou`·`cabat`·`cfile`·`cifin`·`cifex`, 컨텍스트 `/` | WAR 를 풀어 넣는 폴더 | 첫 배포 뒤 로그 |
-| WAS | (선택) atms01 JVM 옵션 `-Datms.fixed-user.per-no=<개인번호>` | 5-2 에서 소스에 넣으면 불필요 | `ps -u jeusatms -o args= \| grep -c 'atms.fixed-user.per-no'` |
 | WebtoB | registration-id 를 넣은 `deploy/webtob/http.m.atms-jsv.txt` 적용 | 화면·모듈 간 호출이 9000 경유 | 6장 확인 |
 | DB | 2·3장 | 테이블 생성 권한은 DB 담당 | — |
 | 인프라 | PC → 16.88.122.112:9000 방화벽 (아직이면) | 화면을 PC 브라우저로 봄 | PC 에서 `http://16.88.122.112:9000` |
@@ -44,11 +43,11 @@
 | 2-2 | `db/check/02_columns.sql` | 컬럼 비교 (읽기만) |
 | 2-3 | 없는 테이블 → DB 담당에 생성 요청 | 참고 DDL `db/ddl/TB_*.sql` 을 함께 전달. **은행 마스터(TB_INSA·TB_OFC_REG_MGT·TB_MCN_INFO·TB_CO_MODEL 등)는 이관 데이터가 있어야** 화면에 값이 나온다 — 빈 테이블만 만들면 사용자·기기가 안 나옴 |
 | 2-4 | `db/seed/01_menu.sql` → `02_auth_menu.sql` | 견본 메뉴 5 · 권한-메뉴 15 행 |
-| 2-5 | `db/seed/03_fixed_user_auth.sql` (틀) | 고정 사용자 개인번호에 권한 행이 없을 때만 (파일 안 `CHANGE_ME` → 개인번호, **커밋하지 않음**) |
+| 2-5 | `db/seed/03_fixed_user_auth.sql` (틀) | 로그인할 테스트 계정 개인번호에 권한 행이 없을 때만 (파일 안 `CHANGE_ME` → 개인번호, **커밋하지 않음**) |
 | 2-6 | `db/seed/10_sample_notice.sql` (선택) | 견본 공지 5건 |
 | 2-7 | `db/check/03_seed_status.sql` | 5 / 15 / 5 |
 
-- 최소 조건: `TB_INSA` 에 고정 사용자 개인번호 행, `TB_SCR_AUTH` 에 그 개인번호의 승인(`APV_STS='Y'`)·미만료 행 → 없으면 화면이 401 `ME_001`·빈 메뉴
+- 최소 조건(2026-11-11 로그인 필수): `TB_INSA` 에 로그인할 개인번호 행(없으면 로그인 `LGN_001`), `TB_SCR_AUTH` 에 그 개인번호의 개인권한(없으면 부서권한 `PER_NO='1'`) 승인(`APV_STS='Y'`)·미만료 행 → 없으면 빈 메뉴
 - `T_API_MESSAGE`·`T_USER_ACTION_LOG` 는 없어도 된다 (백엔드가 건너뜀)
 
 ## 3. DB — NH-ATMS 5개 모듈의 `T_` 테이블 (journal·batch·file·ifin·ifex 가 씀)
@@ -66,10 +65,10 @@
 
 서버는 JEUS 데이터소스가 끼어 원인 구분이 어렵다. 같은 DB 를 PC 에서 먼저 본다 ([ROLLOUT_PLAN.md](ROLLOUT_PLAN.md) L-1~L-3).
 
-1. `D:\local-db.yml` 에 DB 계정·비밀번호·내 개인번호 (새 앱 `docs/01_실행_배포.md` 1-1)
+1. `D:\local-db.yml` 에 DB 계정·비밀번호 (새 앱 `docs/01_실행_배포.md` 1-1 — 개인번호는 넣지 않음, 화면에서 로그인)
 2. IntelliJ Gradle 창 → `atms-web` → `bootRun` (또는 `gradlew.bat :atms-web:bootRun --offline`)
-3. 브라우저 `http://localhost:8080/api/web/me` → 이름·권한이 나오면 2장 완료. `ORA-00942` = 테이블 없음, `ME_001` = 개인번호/권한 행 없음
-4. 화면: `Frontend/nh-atms-web` 에서 `npm ci --offline` → `npm run dev` → `http://localhost:3100` → 견본 메뉴 4개
+3. 브라우저 `http://localhost:8080/api/web/me` → 로그인 전이라 401 `ME_002` 가 정상(백엔드는 뜸)
+4. 화면: `Frontend/nh-atms-web` 에서 `npm ci --offline` → `npm run dev` → `http://localhost:3100` → 로그인 화면에서 개인번호 + 공통 비밀번호로 로그인 → 견본 메뉴. 로그인 실패 `LGN_001` = `TB_INSA` 에 개인번호 없음, `ORA-00942` = 테이블 없음
 
 ## 5. 내부 Gitea 소스 (내부 PC)
 
@@ -78,7 +77,7 @@
 | # | 할 일 |
 |---|---|
 | 5-1 | (사용자가 이미 넣은 5개 모듈은 그대로 `':atms-common'`) `atms-common` 에 `util/GlobalIdGenerator.java` 복사 + `jeus-common.yml` 에 `webtob-url`·`url.*`·`agent-entry.*` 추가 (CLOSED_PC 6-1 ①②) |
-| 5-2 | `atms-web/…/application-jeus.yml` 25번 줄 개인번호 (WAS 가 JVM 옵션을 넣어 주면 생략) |
+| 5-2 | (선택) `Frontend/nh-atms-web/src/screens/login/testAccounts.ts` 의 `CHANGE_ME_1`~`6` → 테스트 계정 개인번호 (2026-11-11 로그인 필수 — 예전 `application-jeus.yml` 개인번호·JVM 옵션은 없앰) |
 | 5-3 | PC 에서 `gradlew.bat bootWar -Pjeus --offline` → WAR 6개 |
 | 5-4 | commit → push → 화면 잡은 `build-deploy`, 백엔드 잡은 2026-11-10부터 **`build-deploy`(빌드 + 6개 배포 + 재기동)** 로 돔. 백엔드 잡 보관 파일 **WAR 6개** 확인 |
 
@@ -209,9 +208,9 @@ curl -s http://16.88.122.112:9000/api/batch/jobs
 | 호출 | 정상 | 아니면 |
 |---|---|---|
 | `/actuator/health` | `{"status":"UP"}` (DB 연결 포함) | `DOWN` → 6장 로그의 데이터소스 오류 |
-| `/api/web/me` | 이름·부서·권한 | 401 `ME_001` → 개인번호 (5-2 / WAS JVM 옵션) 또는 `TB_INSA` 행 / `ORA-00942` → 2장 |
-| `/api/web/menu/my` | `SMP000`·`SMP001~004` | 빈 목록 → `TB_SCR_AUTH`·시드 02 |
-| `/api/web/notice` | `[견본]` 5건 (시드 10 을 넣었으면) | 빈 목록 = 정상(시드 안 넣음) |
+| `/api/web/me` | 로그인 전 401 `ME_002` = 정상 (curl 은 세션이 없음) | 500/`ORA-00942` → 2장. 이름·권한은 화면에서 로그인한 뒤 확인 |
+| `/api/web/menu/my` | curl 은 401 `ME_002`(로그인 필요). 화면에서 로그인하면 `SMP000`·`SMP001~004` | 로그인 뒤 빈 메뉴 → `TB_SCR_AUTH`·시드 02 |
+| `/api/web/notice` | curl 은 401 `ME_002`. 화면에서 로그인하면 `[견본]` 5건 (시드 10 을 넣었으면) | 빈 목록 = 정상(시드 안 넣음) |
 | `/api/batch/jobs` | 배치 작업 목록 (3장 A 후) | 503/302 → abat01·`http.m`, `ORA-00942` → 3장 |
 
 - 응답에 개인번호·이름이 나오므로 사진은 가려서

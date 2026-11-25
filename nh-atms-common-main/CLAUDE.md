@@ -82,10 +82,13 @@
 ## 정해진 것 (바꾸지 않음, `docs/00_설계.md` §0.1·§13.1)
 
 - **NH-ATMS 업무 모듈 5개 동거 (2026-11-09 사용자 결정)** — `Backend/nh-atms-api/atms-{journal,batch,file,if-internal,if-external}` 는 NH-ATMS 에서 가져온 것(개발서버 함께 배포용, `settings.gradle` 주석). **2026-11-10 사용자 결정: 5개 모두 이 저장소의 `atms-common` 하나를 쓴다**(`build.gradle` 원본 그대로 `project(':atms-common')`, `atms-common-nh` 분리 방식 폐기) — 그래서 `atms-common` 에 `util/GlobalIdGenerator`(if-external 용)와 `jeus-common.yml` 의 `jeus.webtob-url`·`jeus.url.*`·`jeus.agent-entry.*`(journal·file 용)가 있다. 이 공통의 보안 설정이 5개 모듈에도 적용된다(모듈 자체 허용 경로는 그대로, batch `/api/batch/**` 는 401). 이 저장소 규칙(응답코드·화면키·새 의존성 금지 등)은 **`atms-common`·`atms-web`·`Frontend` 에만** 적용한다. 5개 모듈은 원본 NH-ATMS 규칙(JWT·`T_` 테이블·한글 문구)을 그대로 두며, 고칠 때는 nh-atms-server `NH-ATMS/CLAUDE.md` 를 따른다. `ApiMessageCodeGuardTest` 는 이 저장소 앱 2개만 검사한다.
-- **로그인 없음 · 고정 사용자** — 설정 `atms.fixed-user.per-no` 의 개인번호 1개로 돈다.
-  - 2026-11-09 예외: **로그인 견본** `/login`(비밀번호 node-forge 암호화, `docs/07_API_계약.md` §7). 설정 `atms.login.enabled=true` 일 때만 세션 사용자가 되고 기본은 고정 사용자 그대로(`web/common/auth/FixedUserFilter.java`, `web/login/**`, `atms-common/security/crypto/**`, `src/utils/fieldCrypto.ts`, `src/screens/login/LoginPage.tsx`). 개발서버는 키 파일 `/home/atmswas/keys` 가 없으면 기동 실패(`application-jeus.yml` `crypto.field`). npm `node-forge` 는 "새 의존성 금지"의 사용자 승인 예외.
-  - 이름·사무소는 `TB_INSA`, 권한은 `TB_SCR_AUTH`(개인권한 우선, 없으면 부서권한 `PER_NO='1'`) → `TB_SCR_AUTH_MENU`(`web/common/auth/FixedUserFilter.java`, `CurrentUserLoader.java`).
-  - 값이 비었거나 `CHANGE_ME` 이면 `/api/**` 가 401 `ME_001`. 실제 값은 `D:\local-db.yml` 에(저장소 밖).
+- **로그인 필수 · 세션 사용자** (2026-11-11 사용자 결정, server1109 에서 2026-11-25 옮김. 그 전엔 "로그인 없음 · 고정 사용자") — `/login` 에서 개인번호·비밀번호로 로그인(`POST /api/web/auth/login`)하면 서버 HTTP 세션에 개인번호가 들어가고, `/api/web/**` 사용자는 그 세션으로 정해진다(`web/login/**`, `web/common/auth/SessionUserFilter.java`·`SessionUserConfig.java`).
+  - 설정 `atms.fixed-user.per-no`·`atms.login.enabled` 는 **없앴다**. 다시 만들지 않는다.
+  - 세션 없음 401 `ME_002`, 세션 개인번호가 `TB_INSA` 에 없음 401 `ME_001` → 프론트는 로그인 화면으로(`src/app/MeGate.tsx`, `src/api/http.ts` `bindUnauthorized`). 헤더에 [로그아웃](`src/components/layout/AppHeader.tsx`) — 조회 캐시·탭을 지운다.
+  - 비밀번호는 공통 테스트 비밀번호 1개(`web/login/service/InsaLoginVerifier.java` `TEST_PASSWORD` = `src/screens/login/testAccounts.ts` `TEST_PASSWORD`, 잠정 Q-17). 두 곳은 같이 바꾼다.
+  - 로그인 화면 옆 테스트 계정 6명은 `src/screens/login/testAccounts.ts`. 저장소에는 `CHANGE_ME_1`~`6` — 실제 개인번호는 **내부 Gitea 사본에서만** 넣는다(GitHub 에 개인번호 금지).
+  - 비밀번호는 node-forge 로 암호화해 보낸다(`docs/07_API_계약.md` §7, `atms-common/security/crypto/**`, `src/utils/fieldCrypto.ts`). 개발서버는 키 파일 `/home/atmswas/keys` 가 없으면 기동 실패(`application-jeus.yml` `crypto.field`). npm `node-forge` 는 "새 의존성 금지"의 사용자 승인 예외.
+  - 이름·사무소는 `TB_INSA`, 권한은 `TB_SCR_AUTH`(개인권한 우선, 없으면 부서권한 `PER_NO='1'`) → `TB_SCR_AUTH_MENU`(`CurrentUserLoader.java`). 권한 행은 권한관리 화면에서 넣는다.
 - **설정은 배포킷 방식 복사**(이 저장소 안에만) — `D:\local-db.yml` + `LocalDbLoginGuard`, `orai18n`, DB 테스트 `@Tag("db")`(기본 제외, `-PdbTest` 로만), `-Pjeus` WAR + JNDI `dsATMS01`(`Backend/nh-atms-api/build.gradle` 머리말).
 - **이름: SQL 만 대문자** — SQL 키워드·테이블·컬럼은 대문자, 컬럼은 정본 이름 그대로(`SELECT OFC_CODE, KANM FROM TB_OFC_REG_MGT`). 자바·JSON·TS 필드는 MyBatis 자동 변환 camelCase(`OFC_CODE` → `ofcCode`).
 - **권한은 5개 플래그** — `TB_SCR_AUTH_MENU` 의 `QRY/REG/UPD/DEL/EXE_ROL_YN`.
@@ -226,7 +229,7 @@ python3 -I db/tools/gen_ddl.py --check
 npm run dev
 ```
 
-- 백엔드(로컬 프로필, `D:\local-db.yml` 에 DB 계정·`atms.fixed-user.per-no` 필요):
+- 백엔드(로컬 프로필, `D:\local-db.yml` 에 DB 계정 필요. 사용자는 화면에서 로그인):
 
 ```bash
 cd Backend/nh-atms-api
@@ -242,4 +245,4 @@ sh gradlew :atms-web:bootRun --offline
 sh gradlew bootWar -Pjeus --offline
 ```
 
-- **API 경로 `/api/web/` (2026-11-10, 사용자 결정 — WebtoB VHOST/URI 구성에 맞춤):** atms-web 컨트롤러는 모두 `/api/web/...`, 화면은 `VITE_API_BASE=/api/web`(env.ts 기본값도). 공통 `SecurityConfig` 의 허용 경로는 `/api/web/auth/**`(그 밖 `/api/**` 는 인증), `FixedUserFilter` 는 `/api/web/` 만 보고 `/api/web/auth/` 는 건너뜀. 새 API 는 `/api/web/` 아래에 만든다.
+- **API 경로 `/api/web/` (2026-11-10, 사용자 결정 — WebtoB VHOST/URI 구성에 맞춤):** atms-web 컨트롤러는 모두 `/api/web/...`, 화면은 `VITE_API_BASE=/api/web`(env.ts 기본값도). 공통 `SecurityConfig` 의 허용 경로는 `/api/web/auth/**`(그 밖 `/api/**` 는 인증), `SessionUserFilter`(옛 `FixedUserFilter`) 는 `/api/web/` 만 보고 `/api/web/auth/` 는 건너뜀. 새 API 는 `/api/web/` 아래에 만든다.

@@ -542,3 +542,12 @@
 | 결정 | `MODULE=auto` 는 다음 반입 때 적용 (수정부 많음). 그때까지 push = 6개 모두 배포·재기동, 한 모듈만은 수동 `MODULE` 선택 | CLOSED_PC_APPLY_GUIDE 8·9 |
 | 완료·결정 | 화면 Jenkins CI/CD 완료(사용자). atms-web API 경로 `/api/...` → **`/api/web/...`** (화면 포함, WebtoB VHOST/URI 구성에 맞춤 — 사용자가 폐쇄망에서 변경) → GitHub 소스도 같게: 컨트롤러·`FixedUserFilter`·행위 로그 제외·공통 `SecurityConfig`(`/api/web/auth/**`)·화면 `VITE_API_BASE`·MSW·테스트, 문서의 확인 주소, `http.m.atms-jsv.txt` 에 `/api/web/` → atms01. 백엔드 테스트·화면 225개 테스트·빌드 통과 | 07_API_계약 |
 | 해결 | 화면 하위 주소에서 새로고침 시 404 → `.env.production` 에 `VITE_ROUTER=hash` (주소가 `/#/sample/notice` 형태, WebtoB 는 항상 `/` 의 index.html 만 받음). GitHub 에도 반영 | — |
+
+## 2026-11-25 · server1109 의 로그인 필수(11-11)·Figma 링크(11-12)를 1120 으로 옮김
+
+| 구분 | 내용 | 문서 |
+|---|---|---|
+| 결정 | server1109 에서 정한 **로그인 필수**(2026-11-11)를 이 저장소에도 적용 — 고정 사용자(`atms.fixed-user.per-no`)·전환 스위치(`atms.login.enabled`) 삭제, `/api/web/**` 사용자는 항상 로그인 세션. 비밀번호는 공통 테스트 비밀번호 1개(잠정 Q-17). 로그인 화면 옆 테스트 계정 6명(`testAccounts.ts`, 개인번호 `CHANGE_ME_1`~`6` — 실제 값은 내부 Gitea 사본에서만). 권한 채택(개인권한 우선, 없으면 부서권한)은 그대로. Figma ATMS GUI 링크(11-12)를 CLAUDE.md 에 기록 | 새 앱 `docs/07_API_계약.md` §7, `docs/00_설계.md` §5.3 |
+| 고침 | `FixedUserFilter`/`FixedUserConfig` → `SessionUserFilter`/`SessionUserConfig`(세션 없음 401 `ME_002`, 인사정보 없음 401 `ME_001` 새 문구), `LoginResult` 에서 `loginEnabled` 삭제, 화면 MeGate·세션 끊김 → `/login`, 헤더 [로그아웃](조회 캐시·탭 지움). 문서: 새 앱 CLAUDE·README·00~08·90·91, 배포킷 문서 | 같은 곳 |
+| 운영 영향 | atms01 JVM 옵션 `-Datms.fixed-user.per-no`·`D:\local-db.yml` 의 `atms.fixed-user.per-no` 필요 없음(남아 있어도 읽지 않음). 로그인 전 `/api/web/me` 401 `ME_002` 가 정상. 세션 쿠키가 WebtoB·JEUS 를 거쳐 유지되는지는 첫 로그인 때 확인 | `POST_HANDOVER_EDITS.md` K, `COMMON_ATMS_INTEGRATION.md` 6장, `PRE_CARRYIN_CHECK.md` #6·#13 |
+| 시험 | 프론트 `npm run check`·`build` 통과, 백엔드 `gradlew build` 통과(테스트 177개). 은행 DB·JEUS 실기동은 안 함 | — |

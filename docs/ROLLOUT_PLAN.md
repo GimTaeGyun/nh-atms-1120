@@ -37,7 +37,7 @@
 | 앱 경로·컨텍스트 | `/home/atmswas/catms`… 6개, `/` | 담당에 수정 요청 — POST_HANDOVER_EDITS **E** |
 | registration-id | 서버마다 1개 | `http.m` 의 `*SERVER` 이름 — POST_HANDOVER_EDITS **F** |
 | `dsATMS01` | Oracle 16.88.250.91:1531 NBATMSTP ATMS_APP, 대상 6개, JEUS 라이브러리에 Oracle JDBC + orai18n | 이름이 다르면 내부 Gitea 사본 `atms-common` 의 `jeus-common.yml` `jndi-name` (6개 모듈 공용 한 곳) — POST_HANDOVER_EDITS **G**. Tibero·대상 누락이면 담당 (T63·T64) |
-| atms01 JVM 옵션 | `-Datms.fixed-user.per-no=…` 있음 — 확인: `ps -u jeusatms -o args= \| grep -c 'atms.fixed-user.per-no'` → 1 이상 | 없으면 담당에 추가 요청 (없으면 화면 전체 401 ME_001) — POST_HANDOVER_EDITS **K** |
+| atms01 JVM 옵션 | 새 앱용 JVM 옵션은 **필요 없음** (2026-11-11 로그인 필수 — 예전 `-Datms.fixed-user.per-no` 는 넣지 않음, 남아 있어도 무해). 로그인 전 `/api/web/me` 401 `ME_002` 는 정상 | 테스트 계정 개인번호는 내부 Gitea 사본 `testAccounts.ts` — POST_HANDOVER_EDITS **K** |
 | jeusRstart 메뉴 | 6개 서버의 boot·down 번호 | 7번에 기입. 없으면 재기동은 담당이 (배포 UNSTABLE, T29) |
 | `curl` 6줄 | 앱 배포 전 `404` | `000` = 그 서버가 안 떠 있음 → 담당 |
 
@@ -176,7 +176,6 @@ rm -rf ~/atms/inbox/npm-carry
 | 앱 경로 | `/home/atmswas/catms`, 컨텍스트 `/` | 등록 |
 | `dsATMS01` | Oracle 16.88.250.91:1531 NBATMSTP ATMS_APP, 대상 atms01, JEUS 라이브러리에 Oracle JDBC + **orai18n** | 데이터소스 수정 |
 | WebtoB 커넥터 | atms01 → wb01:19000 (registration-id) | 커넥터 |
-| JVM 옵션 | **`-Datms.fixed-user.per-no=<개인번호>`** (새 앱 고정 사용자) | 추가 요청 — 없으면 화면 전체 401 `ME_001` |
 | 재기동 메뉴 | jeusRstart 에 atms01 boot·down | 없으면 배포 후 재기동은 담당이 (Jenkins UNSTABLE) |
 
 - **서버 6개 모두 필요** (2026-11-09 결정: NH-ATMS 업무 모듈 5개도 함께 배포 — atms01 = 새 앱, ajou01·abat01·file01·ifin01·ifex01 = NH-ATMS 모듈). `dsATMS01` 대상도 6개.
@@ -214,7 +213,7 @@ curl -s http://16.88.122.113:8080/api/web/me
 tail -n 50 /WASlogs/jeusATMSlogs/nbatmsltws01/app/atms-web.log
 ```
 
-- `200`, `/api/web/me` 에 이름이 나오면 정상. `ME_001` 이면 F 의 개인번호, `Started` 가 로그에 없고 모든 주소 404 면 JEUS Jakarta 미지원 의심 (INFRA_MANUAL 10-5), `[field-crypto] … 키 파일이 없습니다` 면 E.
+- `200`, `/api/web/me` 는 로그인 전이라 401 `ME_002` 면 정상(2026-11-11 로그인 필수 — 이름은 화면에서 로그인한 뒤 확인, 로그인 뒤 `ME_001`·`LGN_001` 이면 그 개인번호가 `TB_INSA` 에 있는지), `Started` 가 로그에 없고 모든 주소 404 면 JEUS Jakarta 미지원 의심 (INFRA_MANUAL 10-5), `[field-crypto] … 키 파일이 없습니다` 면 E.
 3. 화면 잡 `MODE=build-deploy` → PC 브라우저 `http://16.88.122.112:9000` (PC → 9000 방화벽이 열려 있어야 함)
 4. 확인: 첫 화면에 사용자 이름, 견본 화면(공지사항 등) 조회 — DB 오류면 L-2 의 테이블 확인, `/login` 에서 "비밀번호를 암호화해서 보냅니다 (키 k202611)"
 
@@ -302,7 +301,7 @@ npm run dev
 |---|---|---|
 | 10 | 업무 화면 개발 시작 — 견본 복사 방식, API 계약 먼저 | L-4 |
 | 11 | 현업 질문 답 받기 — 새 앱 `docs/90_현업질문_후보.md` Q-01~Q-17 (특히 Q-17 로그인 비밀번호 원천, Q-09 관리자, Q-11 권한 채택 규칙) | 답이 오면 `잠정` 메서드 한 곳만 고침 |
-| 12 | 로그인 방식 확정 — 고정 사용자 유지 / 로그인 견본 켜기(`-Datms.login.enabled=true`, 세션 쿠키 확인 필요) / NH SSO | 새 앱 `docs/07_API_계약.md` §7 |
+| 12 | 로그인 방식 확정 — 지금은 세션 로그인 + 공통 테스트 비밀번호(2026-11-11 로그인 필수, 잠정 Q-17, 세션 쿠키 확인 필요) → 실제 비밀번호 원천 / NH SSO 로 바꿀지 | 새 앱 `docs/07_API_계약.md` §7 |
 | 13 | 화면 배포 확인 뒤 `crypto.field.required=true` (평문 거부) | 같은 곳 |
 | 14 | GitHub(Common-ATMS) ↔ 내부 Gitea 동기화 규칙 정하기 — 폐쇄망에서 바뀐 소스를 밖으로 가져올지, 배포킷만 밖에서 만들지 | 지금은 소스 정본 = 내부 Gitea, 배포킷 정본 = GitHub |
 

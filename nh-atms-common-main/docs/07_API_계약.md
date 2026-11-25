@@ -18,7 +18,7 @@ Audit          { crtDtm?: string; crtCmeno?: string; lschgDtm?: string; lsCmeno?
 
 - 조회 응답 `message:null`. 쓰기 응답은 코드로 문구(`S002` 등록, `S003` 수정, `S004` 삭제, `S005` {0}건 삭제, `S001` 저장).
 - 요청 헤더 `X-Screen-Key`(화면키), `X-Screen-Name`(encodeURIComponent) — 사용기록(§12)·권한 검사용.
-- 권한 부족 403 `SYS_403`, 고정 사용자 문제 401 `ME_001`, 입력 오류 400 `VAL_*`, 없음 404.
+- 권한 부족 403 `SYS_403`, 로그인 필요 401 `ME_002`(세션 없음·만료), 로그인 사용자 문제 401 `ME_001`(세션 개인번호가 인사정보에 없음) — 둘 다 화면은 로그인 화면으로, 입력 오류 400 `VAL_*`, 없음 404.
 - 견본 표의 "권한" 칸은 서버도 검사한다: 조회 GET 도 `@RequireMenuAuth(need=QRY)`, 쓰기는 REG·UPD·DEL(일괄 저장은 서비스에서 종류별). 공통 조회 `/api/web/lookup/*`·`/api/web/me`·`/api/web/menu/my` 는 검사하지 않는다.
 - 입력 길이: 바이트 상한 칸(공지 제목·내용, 모델명)은 ASCII 1·그 밖 2바이트로 센다(잠정 Q-07, 서버 `DbBytes`·프론트 `utils/rules` `byteLength`/`maxBytes` 한 곳).
 
@@ -118,7 +118,7 @@ NoticeSave { subject: string /*필수 ≤200바이트*/; text: string /*필수 �
   - 등록·수정: 관리자가 아니면 `ofcCode` = 내 사무소여야 한다(비움·다른 사무소 403 `NTC_003`). 수정·삭제: 관리자가 아니면 본인 글(`PER_NO` = 나)만(403 `NTC_002`) — 화면 권한 UPD·DEL 검사(`@RequireMenuAuth`)는 그 앞에서 따로.
   - 앞뒤 글: 이전 = 번호가 바로 작은 것, 다음 = 바로 큰 것(볼 수 있는 공지 안에서, 조회조건은 보지 않음).
 - 화면: 새 글 N = 작성일이 오늘부터 3일 안(`NoticeParts.NEW_DAYS`, 새 컬럼 없음). 권한이 조회뿐이면 화면 제목 옆 '읽기 전용', 관리자가 아니면 '본인이 쓴 글만 수정·삭제'.
-- 등록: `NO = NVL(MAX(NO),0)+1`(잠정 Q-02), `NAME`·`PER_NO` = 고정 사용자, `WRT_DATE = SYSDATE`, `VISIT = 0`.
+- 등록: `NO = NVL(MAX(NO),0)+1`(잠정 Q-02), `NAME`·`PER_NO` = 로그인 사용자, `WRT_DATE = SYSDATE`, `VISIT = 0`.
 - 기간 검색: `WRT_DATE >= TO_DATE(#{fromDate},'YYYYMMDD') AND WRT_DATE < TO_DATE(#{toDate},'YYYYMMDD') + 1`. 정렬 `NO DESC`.
 
 ## 4. 견본 — 기기정보 (`sample.mcnInfo`, `/sample/mcn-info`)
@@ -158,7 +158,7 @@ McnModel extends Audit { vendCode: string; vendNm?: string | null; mcnType: stri
 
 | 코드 | 구분 | 문구 |
 |---|---|---|
-| `ME_001` | E | 고정 사용자 개인번호가 없거나 인사정보에 없습니다. 설정 atms.fixed-user.per-no 를 확인하세요. |
+| `ME_001` | E | 로그인한 개인번호가 인사정보에 없습니다. 다시 로그인하세요. |
 | `LKP_001` | E | 사무소 또는 검색어를 입력하세요. |
 | `LKP_002` | E | 조회할 수 없는 항목입니다. ({0}) |
 | `LKP_404` | E | 사무소를 찾을 수 없습니다. ({0}) |
@@ -193,13 +193,15 @@ McnModel extends Audit { vendCode: string; vendNm?: string | null; mcnType: stri
 | `CRYPTO_REQUIRED` · `CRYPTO_FORMAT` · `CRYPTO_KID` · `CRYPTO_DECRYPT` · `CRYPTO_EXPIRED` · `CRYPTO_REPLAY` | E | 암호화 오류 6종 (문구는 TSV, nh-atms-server 암호화 모듈과 같음) |
 
 원본에서 그대로 쓰는 코드: `0000`, `S001~S005`, `SYS_401/403/404/405/500`, `VAL_001~004`, `V001_20`, `E404`, `NTC_001`, `MNU_001`(하위 메뉴가 있어 삭제 불가 — 메뉴관리).
-단, `SYS_401` 은 코드만 원본이고 문구는 "사용자 확인이 필요합니다." 로 바꿨다(로그인 화면이 없어 "로그인" 말을 쓰지 않음, TSV 주석 참고).
+단, `SYS_401` 은 코드만 원본이고 문구는 "사용자 확인이 필요합니다." 로 바꿨다(처음엔 로그인 화면이 없었음. 로그인이 필요할 때는 `ME_002` 가 나간다, TSV 주석 참고).
 
-## 7. 로그인 견본 · 민감필드 암호화 (`/api/web/auth/*`, 화면 `/login`) — 2026-11-09
+## 7. 로그인 · 민감필드 암호화 (`/api/web/auth/*`, 화면 `/login`) — 2026-11-09 견본, 2026-11-11 필수
 
-- 목적: 비밀번호를 **node-forge 로 암호화해 보내는 로그인 화면** 견본. 원본: nh-atms-server NH-ATMS 암호화 모듈(2026-11-03).
-- 기본은 지금처럼 고정 사용자다. 설정 `atms.login.enabled=true` 일 때만 로그인 세션이 화면 사용자가 된다.
-- `/api/web/auth/**` 는 사용자 확인 전에 부른다 — SecurityConfig 허용, FixedUserFilter 제외, 권한 플래그 없음.
+- 비밀번호를 **node-forge 로 암호화해 보내는 로그인 화면**. 원본: nh-atms-server NH-ATMS 암호화 모듈(2026-11-03).
+- **로그인 필수**(2026-11-11 사용자 결정, 1120 반영 2026-11-25): `/api/web/**` 사용자는 항상 로그인 세션(`SessionUserFilter`). 예전 고정 사용자(`atms.fixed-user.per-no`)·전환 스위치(`atms.login.enabled`)는 없앴다.
+- `/api/web/auth/**` 는 사용자 확인 전에 부른다 — SecurityConfig 허용, SessionUserFilter 제외, 권한 플래그 없음.
+- 화면 `/login` 옆에 테스트 계정 6명(`src/screens/login/testAccounts.ts`, 저장소 개인번호는 `CHANGE_ME_1`~`6` — 실제 값은 내부 Gitea 사본에서만)과 공통 비밀번호를 보여 준다. 줄을 누르면 입력 칸이 채워진다. 로그인하면 이전 사용자의 조회 캐시·탭을 지우고 원래 가려던 화면으로 간다.
+- 헤더 [로그아웃] → `POST /api/web/auth/logout` → 조회 캐시·탭을 지우고 `/login`. 쓰다가 세션이 끊기면(401 `ME_002`·`ME_001`) 바로 `/login`.
 
 | 메서드 · 경로 | 요청 | 응답 data | 성공 문구 | 오류 |
 |---|---|---|---|---|
@@ -210,7 +212,7 @@ McnModel extends Audit { vendCode: string; vendNm?: string | null; mcnType: stri
 ```ts
 interface PublicKeyInfo { enabled: boolean; serverTime: number; kid?: string; alg?: string; publicKey?: string }   // enabled=false 면 평문 전송
 interface LoginRequest { perNo: string; password: string }   // password = ENC1 암호문 (서버 암호화가 꺼져 있으면 평문)
-interface LoginResult { perNo: string; name: string; loginEnabled: boolean }   // 비밀번호는 응답에 없음
+interface LoginResult { perNo: string; name: string }   // 비밀번호는 응답에 없음
 ```
 
 - 암호문 형식: `ENC1.<kid>.<b64 RSA-OAEP(SHA-256, MGF1 SHA-256)으로 감싼 AES 키>.<b64 IV 12바이트>.<b64 AES-256-GCM 암호문+태그>`
@@ -218,13 +220,12 @@ interface LoginResult { perNo: string; name: string; loginEnabled: boolean }   /
   - 비유: 편지(값)를 일회용 자물쇠(AES 키)로 잠그고, 그 열쇠만 서버 공개키 봉투(RSA)에 넣어 보낸다. 봉투는 서버만 연다.
 - 서버: 요청 DTO 필드에 `@EncryptedField` (`atms-common/security/crypto`) → 본문을 읽을 때 평문으로 바뀐다. 컨트롤러·서비스는 평문만 본다.
 - 화면: `src/utils/fieldCrypto.ts` `encryptField(value)` — 공개키는 `loginApi.publicKey()` 로 한 번 받아 둔다. `CRYPTO_*` 오류면 `handleFieldCryptoError` 가 다시 받게 한다.
-- 검증: `web/login/service/LoginVerifier` — 지금 구현 `InsaLoginVerifier` 는 개인번호가 `TB_INSA` 에 있고 비밀번호가 비어 있지 않으면 성공 (**잠정 Q-17**, 비밀번호 원천 없음).
+- 검증: `web/login/service/LoginVerifier` — 지금 구현 `InsaLoginVerifier` 는 개인번호가 `TB_INSA` 에 있고 비밀번호가 공통 테스트 비밀번호 `TEST_PASSWORD`(`atms1234!`, 화면 `testAccounts.ts` 와 같은 값 — 둘은 같이 바꾼다)와 같으면 성공 (**잠정 Q-17**, 비밀번호 원천 없음).
 - 성공하면 옛 세션을 버리고 새 HTTP 세션에 개인번호(`atms.login.perNo`)를 넣는다(세션 고정 방지).
 - 설정 (`atms-web` yml)
 
 | 키 | 기본 | local | jeus |
 |---|---|---|---|
-| `atms.login.enabled` | `false` | — | — |
 | `crypto.field.enabled` | `false` | `true` | `true` |
 | `crypto.field.kid` | `dev` | `local` | `k202611` |
 | `crypto.field.generate-if-missing` | `false` | `true` (기동 때 임시 키, 재기동마다 바뀜) | — |
@@ -262,7 +263,7 @@ chmod 640 /home/atmswas/keys/field-k202611.key.pem /home/atmswas/keys/field-k202
 
 - AS-IS "시스템 사용권한부여" 화면 구성(조회조건 개인사번 / 권한목록: 순번·부서정보·사무소정보·권한·등록정보 / 등록·엑셀·조회) + 메뉴별 권한. 화면은 탭 2개.
 - 권한은 이 화면 기준(`sample.authMgt`). 메뉴 권한 일괄 저장만 서비스에서 종류별로 검사한다(기기모델코드 견본과 같음).
-- 쓰기가 끝나면 서버가 고정 사용자 캐시(`CurrentUserLoader`, 1분)를 비운다 — 내 권한을 바꾸면 바로 반영.
+- 쓰기가 끝나면 서버가 사용자 캐시(`CurrentUserLoader`, 1분)를 비운다 — 내 권한을 바꾸면 바로 반영.
 
 ### 8-1. 부서권한 · 개인권한 (TB_SCR_AUTH, 키 `DEPT_CODE+OFC_CODE+PER_NO`)
 
@@ -291,7 +292,7 @@ AuthUserSave { deptCode?: string /*부서권한 등록 때 필수*/; ofcCode?: s
 ```
 - 키 정리: 부서·사무소는 숫자 1~6자리 → 6자리(형식 오류 400 `VAL_003`(필드명)), 비면 400 `VAL_001`(필드명). 비교는 `CAST(#{v} AS CHAR(6))`.
 - 등록 키는 서버가 `TB_OFC_RAW` 로 채운다 — 부서권한: `DEPT_CODE` = 고른 부서, `OFC_CODE` = 그 부서의 `ONLINE_CODE`, `PER_NO` = '1' / 개인권한: `DEPT_CODE`·`OFC_CODE` = 그 사람(`TB_INSA.SAMUSO`)의 `TB_OFC_RAW` `SAMUSO`·`ONLINE_CODE`.
-- 등록: `INS_DATE` = 지금(14자리), `INS_ID` = 고정 사용자 개인번호. 수정은 `AUTH`·`APV_STS`·`DUE_DATE`·`MEMO` 만. 삭제는 물리 삭제.
+- 등록: `INS_DATE` = 지금(14자리), `INS_ID` = 로그인 사용자 개인번호. 수정은 `AUTH`·`APV_STS`·`DUE_DATE`·`MEMO` 만. 삭제는 물리 삭제.
 - 표시: 성명 `TB_INSA.NAME`, 사무소명 `TB_OFC_REG_MGT.KANM`, 부서명 `TB_OFC_RAW.SAMUSO_NAME`(`TB_OFC_RAW.SAMUSO = DEPT_CODE`), 권한명은 설정 `atms.auth-mgt.auth-code-type` 이 있을 때만 `TB_CODE_DTL.CODE_NM`(잠정 Q-20, 2026-11-16 예전 `TB_CO_CODE`). 승인상태 값 'Y'/'N'(잠정 Q-18).
 - 정렬 `OFC_CODE, PER_NO, DEPT_CODE`.
 

@@ -122,7 +122,7 @@ export const topItems = (menus: MenuTreeNode[]): TopItem[] => [
 
 | API | 권한 | 하는 일 |
 |---|---|---|
-| `GET /api/web/menu/my` | 로그인 사용자(고정 사용자) | 바뀌지 않음 — `TB_SCR_MENU`(사용 Y) + 내 권한의 `TB_SCR_AUTH_MENU`. 화면은 조회 권한이 있어야, 그룹은 보이는 하위가 있어야 내려옴(관리자는 전부) |
+| `GET /api/web/menu/my` | 로그인 사용자(세션) | 바뀌지 않음 — `TB_SCR_MENU`(사용 Y) + 내 권한의 `TB_SCR_AUTH_MENU`. 화면은 조회 권한이 있어야, 그룹은 보이는 하위가 있어야 내려옴(관리자는 전부) |
 
 ## 6. 검사 · 확인
 

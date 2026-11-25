@@ -12,15 +12,15 @@
 | 2 | **배포킷 문서가 옛 저장소 이름**(`ATMS-Server-main.zip`)이고, 서버 업로드 제외 목록에 `nh-atms-common-main/` 이 없었음 | 🔧 | DEV_SERVER_SETUP·INFRA_MANUAL·REQUIRED_FILES 등 이름·제외 목록 수정. zip 은 약 100MB (사진 90MB 포함) — 반입 한도가 있으면 INFRA_MANUAL 4-5 처럼 분할 |
 | 3 | **내부 Gitea 에 새 앱 소스를 올리는 절차가 없었음** | 🔧 | 4장에 추가 (저장소 `NH-ATMS/nh-atms` 내용을 `nh-atms-common-main/` 안의 내용으로 교체) |
 | 4 | 새 프론트 `.env.production`·`.env.development`·`.env.mock` 이 저장소에 없음 | ✅ | 2026-11-09 사용자가 ATMS-server 에 올린 원본(커밋 `97463ac`)을 Common-ATMS 로 옮김. 비밀값 없음(`VITE_*`·`DEV_PROXY_TARGET` 만), 빌드·테스트 225개 통과 |
-| 5 | 필드 암호화 키 파일 `/home/atmswas/keys/field-k202611.{key,pub}.pem` | ⚠️ | **없으면 atms01 기동 실패** (로그인 견본 추가로 다시 필요). `POST_HANDOVER_EDITS.md` 0-2 — 그 명령 그대로 만든 키로 기동 확인함 (2-4) |
-| 6 | 고정 사용자 개인번호 | ⚠️ | atms01 JVM 옵션 `-Datms.fixed-user.per-no=<개인번호>` (WAS 담당) — 없으면 화면 전체 401 `ME_001` (`POST_HANDOVER_EDITS.md` K) |
+| 5 | 필드 암호화 키 파일 `/home/atmswas/keys/field-k202611.{key,pub}.pem` | ⚠️ | **없으면 atms01 기동 실패** (로그인 화면 암호화에 필요 — 2026-11-11 부터 로그인 필수). `POST_HANDOVER_EDITS.md` 0-2 — 그 명령 그대로 만든 키로 기동 확인함 (2-4) |
+| 6 | ~~고정 사용자 개인번호~~ → 로그인 테스트 계정 (2026-11-11 로그인 필수, 1120 반영 2026-11-25) | ✅ | JVM 옵션 필요 없음. 로그인 화면 옆 테스트 계정 개인번호는 내부 Gitea 사본 `src/screens/login/testAccounts.ts` 에(선택). 로그인 전 `/api/web/me` 401 `ME_002` 는 정상 (`POST_HANDOVER_EDITS.md` K) |
 | 7 | npm 캐시 (143개 + node-forge) | ⚠️ | `deploy/offline-bundle/make-npm-carry.bat` → zip 1개 → 팀 PC·Jenkins 에 합치기 (`REQUIRED_FILES.md` 3-5). Windows 실행은 미시험 |
 | 8 | DB: 새 앱 TB_ 테이블 15개 + 시드 | ⚠️ | `nh-atms-common-main/db/check/01·02` → `db/seed` (JNDI 계정 ATMS_APP 에서 보여야 함) |
 | 9 | Gradle 캐시 (Jenkins `/cache/gradle`) | ✅ | 새 앱 WAR 의 jar 69개가 모두 NH-ATMS WAR 6개에 있음 → 새 반입 없음 (2-3). Gradle 8.14.4·플러그인 블록 같음 |
 | 10 | WAS 담당 작업 (atms01 :8080, WebtoB 커넥터, JNDI `dsATMS01` Oracle + orai18n, 재기동 메뉴) | ❔ | 기존과 같음 (`WAS_REQUEST_MANAGED_SERVERS.md`). 서버 6개 요청은 유지 결정 |
 | 11 | WebtoB `http.m` 적용 | ❔ | 기존과 같음. 새 앱은 `/api/`·`/v3/api-docs` → atms01 만 씀 (나머지 URI 는 둬도 무해) |
 | 12 | JEUS 9.1 의 Jakarta EE(Servlet 5/6) 지원 | ❔ | 기존부터 열린 위험 — 첫 배포에서 Spring 기동 로그가 안 보이고 전부 404 면 "미지원" (CLAUDE.md) |
-| 13 | 로그인 견본을 켤 때(`atms.login.enabled=true`)의 세션 쿠키 | ❔ | 기본 꺼짐이라 첫 배포와 무관. 켤 때 WebtoB·JEUS 를 거친 `JSESSIONID` 유지 확인 필요 (이 환경에서 미시험) |
+| 13 | 로그인 세션 쿠키 | ❔ | 2026-11-11 부터 로그인 필수라 **첫 배포부터** WebtoB·JEUS 를 거친 `JSESSIONID` 유지 확인 필요 (이 환경에서 미시험). 로그인 직후 다시 로그인 화면이면 이것부터 |
 
 ## 2. 이 환경에서 직접 돌려 본 것
 
@@ -63,7 +63,7 @@
 | 기동 확인 주소 `/v3/api-docs` (`deploy-war.sh`) | ✅ 200 |
 | swagger 화면 | ✅ 404 (jeus 에서 끔) |
 | `/api/web/auth/public-key` | ✅ `enabled:true, kid:k202611` |
-| `/api/web/me` (개인번호 `CHANGE_ME` 상태) | ✅ 401 `ME_001` — #6 을 해야 화면이 열림 |
+| `/api/web/me` (개인번호 `CHANGE_ME` 상태) | ✅ 401 `ME_001` — 당시(고정 사용자) 결과. 2026-11-11 로그인 필수 뒤로는 로그인 전 401 `ME_002` 가 정상 |
 | 로그 파일 `${jeus.log-dir}/atms-web.log` | ✅ 생성 |
 | CORS — 고치기 전 `Origin: http://16.88.122.112:9000` | ❌ 403 → 🔧 고친 뒤 통과(400 = 빈 본문 검사), 다른 Origin 은 그대로 403 |
 
@@ -129,7 +129,7 @@ git push origin main
 ```
 
 - 웹훅으로 화면·백엔드 잡이 `build-only` 로 돈다 (배포는 하지 않음). 둘 다 성공하면 1장 #5·#6·#8 을 마친 뒤 `build-deploy`
-- 개인번호를 JVM 옵션 대신 소스에 넣는다면 이 사본의 `Backend/nh-atms-api/atms-web/src/main/resources/application-jeus.yml` `atms.fixed-user.per-no` 만 바꾼다 (GitHub 에는 올리지 않음)
+- 로그인 화면 옆 테스트 계정 개인번호를 넣는다면 이 사본의 `Frontend/nh-atms-web/src/screens/login/testAccounts.ts` `CHANGE_ME_1`~`6` 만 바꾼다 (GitHub 에는 올리지 않음, 2026-11-11 로그인 필수 — 예전 `atms.fixed-user.per-no` 는 없앰)
 
 ## 5. 첫 배포 순서 (요약)
 
