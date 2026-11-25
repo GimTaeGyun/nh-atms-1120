@@ -470,17 +470,16 @@ interface UseLogExcelRequest { fileName: string; rowCount: number }
 - 보이는 범위(서버 `web/uselog/service/UseLogRules.java`): 관리자 = 모든 사무소(사무소 칸으로 거름), 그 밖 = 내 권한 사무소 기록만(권한 사무소가 없으면 0건). 상세도 같은 규칙(다른 사무소면 404).
 - 엑셀 기록: 프론트 공통 `utils/excel.ts downloadExcel` 이 내려받기 직전에 부른다(사유 없음, 2026-11-17 사용자 결정). 화면은 `X-Screen-Key` 헤더로 안다. 실패해도 내려받기는 계속.
 
-## 13. 저널조회 (`jnal.jnalList`, 화면 `/jnal/jnal-list`) — 2026-11-24
+## 13. 저널조회 (`journal.journalList`, 화면 `/journal/journal-list`) — 2026-11-24
 
-> 자동화기기 1대의 전자저널(`TB_JL_JNAL`·`TB_JL_JNAL_CHK`)을 조회한다(ILM 테이블은 읽지 않음 — 저널 2차 파기 조회 화면 몫). 조회만 — 메뉴 권한 QRY, 사용기록 R 자동. 규칙 한 곳 = 서버 `web/jnal/service/JnalRules.java`(As-Is 저널조회 화면·인클루드 근거).
+> 자동화기기 1대의 전자저널(`TB_JL_JNAL`·`TB_JL_JNAL_CHK`)을 조회한다(ILM 테이블은 읽지 않음 — 저널 2차 파기 조회 화면 몫). 조회만 — 메뉴 권한 QRY, 사용기록 R 자동. 규칙 한 곳 = 서버 `web/journal/journallist/service/JournalListRules.java`(As-Is 저널조회 화면·인클루드 근거). 명세표 팝업(`popup.slipImage`)·수표목록은 별도 일정(2026-11-25 사용자 결정).
 
 | 메서드 경로 | 요청 | 응답 data | 권한 | 문구 |
 |---|---|---|---|---|
-| `GET /api/web/jnal` | `JnalSearch` | `Jnal[]`(페이지 없음, 최근 순, 같은 명세표는 합친 한 행) | QRY | 필수 없음 `VAL_002`, 형식·조회조건 `VAL_003`, 순서·2일 넘음 `VAL_001`, 5년 `JNL_001`, 3개월 조회 허가 `JNL_002` |
-| `GET /api/web/jnal/checks` | `JnalCheckKey` | `JnalCheck[]`(일련번호 순) | QRY | 목록과 같은 사무소·기간 규칙 |
+| `GET /api/web/journal/journal-list` | `JournalListSearch` | `JournalListRow[]`(페이지 없음, 최근 순, 같은 명세표는 합친 한 행) | QRY | 필수 없음 `VAL_002`, 형식·조회조건 `VAL_003`, 순서·2일 넘음 `VAL_001`, 5년 `JNL_001`, 3개월 조회 허가 `JNL_002` |
 
 ```ts
-interface JnalSearch {
+interface JournalListSearch {
   ofcCode: string;                    // 필수. 권한 A·T·L(관리자 포함)만 고름, 그 밖은 서버가 내 사무소로 덮어씀
   mcnNo: string;                      // 필수(3자리로 채움)
   fromDate: string; toDate: string;   // 저널일자 YYYYMMDD 필수, 최대 2일(양끝 포함)
@@ -490,7 +489,7 @@ interface JnalSearch {
   field?: 'ACCT' | 'CHK' | 'DTLS';    // 계좌번호·수표번호·명세표일련번호 — 저널구분에 없는 값은 VAL_003(전체·33 = 셋, 22 = 계좌·명세표, 11·44·55 = 명세표)
   keyword?: string;                   // 공백은 뗌. 계좌 = 하이픈도 떼고 부분일치, 수표 = 부분일치(영문·숫자·-), 명세표 = '0001-0050' · '-0050' · '0001-' · 번호 하나(그 번호만)
 }
-interface Jnal {
+interface JournalListRow {
   jnalDt: string; jnalTime: string | null; jnalSeqno: string; ofcCode: string; mcnNo: string;
   jnalType: string | null;            // 00·22·33 거래, 11 개국, 44 합계, 55 운영
   jrnlProcRest: string | null;        // 01 정상·02 불능·97 취소정상·98 취소불능·99 확인요망·77 고객조작취소
@@ -505,8 +504,6 @@ interface Jnal {
   rolComts: string[];                 // 롤방식 글 — '전인자\n후인자' 를 합친 저널마다 하나
   dtlComts: string[];                 // 후인자만 — 합친 저널마다 하나
 }
-interface JnalCheckKey { jnalDt: string; ofcCode: string; mcnNo: string; jnalSeqno: string }
-interface JnalCheck { seqno: string | null; chkNo: string | null }
 ```
 
 - 합치기(As-Is `rconcat`): SQL 순서(저널일자·시간·일련번호 내림차순)대로 돌며 저널구분이 55 가 아니고 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번이 1 이 아니면 바로 앞에 남긴 행에 합친다.

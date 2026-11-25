@@ -20,8 +20,8 @@ export const SCREEN_IDS = {
   'sample.menuMgt': '',
   'sample.codeMgt': '',
   'sample.useLog': '',
-  // ---- 저널(jnal) ----
-  'jnal.jnalList': '',
+  // ---- 저널관리(journal) ----
+  'journal.journalList': '',
   // ---- 팝업 ----
   'popup.officeSearch': '',
   'popup.personSearch': '',
@@ -35,7 +35,6 @@ export const SCREEN_IDS = {
   'popup.codeDetailView': '',
   'popup.codeDetailEdit': '',
   'popup.useLogView': '',
-  'popup.jnalView': '',
 } as const;
 
 export type ScreenKey = keyof typeof SCREEN_IDS;

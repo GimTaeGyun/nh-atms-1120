@@ -1,0 +1,170 @@
+{
+ "order": 12,
+ "screenKey": "journal.journalList",
+ "title": "저널조회",
+ "body": "journal.journalList.md",
+ "base": "1910cb6",
+ "groups": {
+  "D": "DB",
+  "B": "백엔드",
+  "F": "프론트"
+ },
+ "steps": [
+  {
+   "no": "D1",
+   "kind": "diff",
+   "path": "db/ddl/_source_columns.csv",
+   "desc": "정본 CSV(nh-atms 20_TOBE컬럼정의서) 행 — TB_JL_JNAL·_CHK·_ILM·_CHK_ILM 96줄(중복 인쇄는 한 벌)."
+  },
+  {
+   "no": "D2",
+   "kind": "diff",
+   "path": "db/ddl/_source_entities.csv",
+   "desc": "정본 엔터티 행 4줄."
+  },
+  {
+   "no": "D3",
+   "kind": "diff",
+   "path": "db/tools/gen_ddl.py",
+   "desc": "TABLES 에 4테이블."
+  },
+  {
+   "no": "D4",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "D5",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL_CHK.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "D6",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL_ILM.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "D7",
+   "kind": "new",
+   "path": "db/ddl/TB_JL_JNAL_CHK_ILM.sql",
+   "desc": "참고 DDL(생성물)."
+  },
+  {
+   "no": "B1",
+   "kind": "diff",
+   "path": "Backend/nh-atms-api/atms-common/src/main/resources/api-message/api-messages.tsv",
+   "desc": "오류 문구 JNL_001(2차 파기)·JNL_002(3개월 조회 허가) 두 줄."
+  },
+  {
+   "no": "B2",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/dto/JournalListSearchDto.java",
+   "desc": "조회조건 + 서비스가 채우는 값(시간·검색값)."
+  },
+  {
+   "no": "B3",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/dto/JournalListRow.java",
+   "desc": "저널 한 행(합친 인자 글 rolComts·dtlComts, 내부 rn·pRn 은 응답에서 뺌)."
+  },
+  {
+   "no": "B4",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/service/JournalListRules.java",
+   "desc": "규칙 한 곳(계획 목록에 없는 파일 — 저장소 규칙 'XxxRules', 2026-11-25 사용자 결정) — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·합치기·거래명."
+  },
+  {
+   "no": "B5",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/mapper/JournalListMapper.java",
+   "desc": "매퍼 — selectList."
+  },
+  {
+   "no": "B6",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/resources/mapper/journal/JournalListMapper.xml",
+   "desc": "As-Is 저널 SQL 이식(TB_JL_JNAL + 수표 묶음, RN·P_RN)."
+  },
+  {
+   "no": "B7",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/service/JournalListService.java",
+   "desc": "SQL 한 번 → 거래명 → 합치기."
+  },
+  {
+   "no": "B8",
+   "kind": "replace",
+   "path": "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/controller/JournalListController.java",
+   "desc": "GET /api/web/journal/journal-list (QRY, 사용기록 R)."
+  },
+  {
+   "no": "B9",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/journal/journallist/JournalListRulesTest.java",
+   "desc": "규칙 시험(레포만)."
+  },
+  {
+   "no": "B10",
+   "kind": "new",
+   "path": "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/journal/journallist/JournalListServiceTest.java",
+   "desc": "서비스 시험(레포만)."
+  },
+  {
+   "no": "F1",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/utils/date.ts",
+   "desc": "공통 hourOptions(시 단위 옵션)."
+  },
+  {
+   "no": "F2",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/utils/format.ts",
+   "desc": "공통 fmtAcctNo(계좌번호 하이픈)."
+  },
+  {
+   "no": "F3",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/fields.tsx",
+   "desc": "TimeRangeSelect·timeRangeField 에 hourly."
+  },
+  {
+   "no": "F4",
+   "kind": "diff",
+   "path": "Frontend/nh-atms-web/src/components/search/optionFields.tsx",
+   "desc": "keywordTypeFields 에 optionsBy·keywordPlaceholder."
+  },
+  {
+   "no": "F5",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/domain/journalList.ts",
+   "desc": "타입(계약 §13)."
+  },
+  {
+   "no": "F6",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/api/endpoints/journalList.ts",
+   "desc": "journalListApi·journalListKeys."
+  },
+  {
+   "no": "F7",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/journal/JournalListParts.tsx",
+   "desc": "선택지·표시 글자·조회조건·파라미터·롤방식 글."
+  },
+  {
+   "no": "F8",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/journal/JournalListColumns.tsx",
+   "desc": "목록 10칸."
+  },
+  {
+   "no": "F9",
+   "kind": "replace",
+   "path": "Frontend/nh-atms-web/src/screens/journal/JournalListPage.tsx",
+   "desc": "화면 본체."
+  }
+ ]
+}

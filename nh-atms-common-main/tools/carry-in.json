@@ -1101,10 +1101,10 @@
    "name": "저널조회",
    "part": "제12부",
    "summary": [
-    "저널조회 화면(jnal.jnalList): 조회조건(공통 필드) → 서버가 합친 저널 목록 20건씩 · 롤방식 보기 · 명세표 팝업(명세서·수표목록·저널)",
-    "백엔드 web/jnal/**(규칙 JnalRules 한 곳) + mapper/jnal/JnalMapper.xml(As-Is SQL, TB_JL_JNAL 만) + 응답코드 JNL_001·002",
+    "저널조회 화면(journal.journalList): 조회조건(공통 필드) → 서버가 합친 저널 목록 20건씩 · 롤방식 보기 (명세표 팝업은 별도 일정)",
+    "백엔드 web/journal/journallist/**(규칙 JournalListRules 한 곳) + mapper/journal/JournalListMapper.xml(As-Is SQL, TB_JL_JNAL 만) + 응답코드 JNL_001·002",
     "공통: 시 단위 시간 범위(hourly)·검색구분 선택지 바꾸기(optionsBy)·계좌번호 하이픈(fmtAcctNo)",
-    "DB: 정본 저널 테이블 4개 행·참고 DDL, 메뉴는 메뉴관리 화면에서 경로 /jnal/jnal-list"
+    "DB: 정본 저널 테이블 4개 행·참고 DDL, 메뉴는 메뉴관리 화면에서 경로 /journal/journal-list"
    ],
    "files": [
     [
@@ -1140,48 +1140,32 @@
      "오류 문구 JNL_001(2차 파기)·JNL_002(3개월 조회 허가) 두 줄."
     ],
     [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalSearchDto.java",
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/dto/JournalListSearchDto.java",
      "조회조건 + 서비스가 채우는 값(시간·검색값)."
     ],
     [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/Jnal.java",
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/dto/JournalListRow.java",
      "저널 한 행(합친 인자 글 rolComts·dtlComts, 내부 rn·pRn 은 응답에서 뺌)."
     ],
     [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheck.java",
-     "수표 한 장(일련번호·수표번호)."
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/service/JournalListRules.java",
+     "규칙 한 곳(계획 목록에 없는 파일 — 저장소 규칙 'XxxRules', 2026-11-25 사용자 결정) — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·합치기·거래명."
     ],
     [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/dto/JnalCheckKey.java",
-     "수표목록 조건 = 저널 키."
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/mapper/JournalListMapper.java",
+     "매퍼 — selectList."
     ],
     [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalRules.java",
-     "규칙 한 곳 — 필수·2일·5년·조회 허가·사무소·IT부문·시간·명세표 범위·합치기·거래명."
-    ],
-    [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/mapper/JnalMapper.java",
-     "매퍼 — selectList·selectChecks."
-    ],
-    [
-     "Backend/nh-atms-api/atms-web/src/main/resources/mapper/jnal/JnalMapper.xml",
+     "Backend/nh-atms-api/atms-web/src/main/resources/mapper/journal/JournalListMapper.xml",
      "As-Is 저널 SQL 이식(TB_JL_JNAL + 수표 묶음, RN·P_RN)."
     ],
     [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/service/JnalService.java",
-     "SQL 한 번 → 거래명 → 합치기, 수표목록."
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/service/JournalListService.java",
+     "SQL 한 번 → 거래명 → 합치기."
     ],
     [
-     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/jnal/controller/JnalController.java",
-     "GET /api/web/jnal, /api/web/jnal/checks (QRY, 사용기록 R)."
-    ],
-    [
-     "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalRulesTest.java",
-     "규칙 시험 13개."
-    ],
-    [
-     "Backend/nh-atms-api/atms-web/src/test/java/kr/co/nh/atms/web/jnal/JnalServiceTest.java",
-     "서비스 시험 2개(한 번 읽고 합침·수표목록 키)."
+     "Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/journal/journallist/controller/JournalListController.java",
+     "GET /api/web/journal/journal-list (QRY, 사용기록 R)."
     ],
     [
      "Frontend/nh-atms-web/src/utils/date.ts",
@@ -1200,36 +1184,24 @@
      "keywordTypeFields 에 optionsBy·keywordPlaceholder."
     ],
     [
-     "Frontend/nh-atms-web/src/domain/jnal.ts",
+     "Frontend/nh-atms-web/src/domain/journalList.ts",
      "타입(계약 §13)."
     ],
     [
-     "Frontend/nh-atms-web/src/api/endpoints/jnal.ts",
-     "jnalApi·jnalKeys."
+     "Frontend/nh-atms-web/src/api/endpoints/journalList.ts",
+     "journalListApi·journalListKeys."
     ],
     [
-     "Frontend/nh-atms-web/src/screens/screenIds.ts",
-     "화면키 jnal.jnalList·popup.jnalView."
+     "Frontend/nh-atms-web/src/screens/journal/JournalListParts.tsx",
+     "선택지·표시 글자·조회조건·파라미터·롤방식 글."
     ],
     [
-     "Frontend/nh-atms-web/src/screens/jnal/JnalListParts.tsx",
-     "선택지·표시 글자·조회조건·파라미터·롤방식 글·명세서 항목."
+     "Frontend/nh-atms-web/src/screens/journal/JournalListColumns.tsx",
+     "목록 10칸."
     ],
     [
-     "Frontend/nh-atms-web/src/screens/jnal/JnalListColumns.tsx",
-     "목록 11칸."
-    ],
-    [
-     "Frontend/nh-atms-web/src/screens/popup/JnalViewModal.tsx",
-     "명세표 팝업(명세서·수표목록·저널)."
-    ],
-    [
-     "Frontend/nh-atms-web/src/screens/jnal/JnalListPage.tsx",
+     "Frontend/nh-atms-web/src/screens/journal/JournalListPage.tsx",
      "화면 본체."
-    ],
-    [
-     "Frontend/nh-atms-web/src/screens/registry.ts",
-     "화면 등록 한 줄(F11 다음)."
     ]
    ]
   }

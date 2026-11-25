@@ -1,7 +1,7 @@
 /**
- * 저널조회(`jnal.jnalList`) 부품 — 선택지·표시 글자·조회조건·조건→파라미터·롤방식 글·명세서 항목.
- * 화면 본체 JnalListPage.tsx, 컬럼 JnalListColumns.tsx, 팝업 popup/JnalViewModal.tsx 가 함께 쓴다.
- * 규칙(As-Is 저널조회 화면 근거, 서버 JnalRules 와 같음): 저널일자 최대 2일, 권한 A·T·L 만 사무소를 고름,
+ * 저널조회(`journal.journalList`) 부품 — 선택지·표시 글자·조회조건·조건→파라미터·롤방식 글·명세서 항목.
+ * 화면 본체 JournalListPage.tsx, 컬럼 JournalListColumns.tsx 가 함께 쓴다.
+ * 규칙(As-Is 저널조회 화면 근거, 서버 JournalListRules 와 같음): 저널일자 최대 2일, 권한 A·T·L 만 사무소를 고름,
  * IT부문(내 사무소 000080) 비관리자는 조회조건 없음, 저널구분에 따라 조회조건 선택지가 바뀜.
  */
 import { useMemo } from 'react';
@@ -10,13 +10,12 @@ import { mcnField, officeField, timeRangeField } from '@/components/search/field
 import { rangeField } from '@/components/search/dateFields';
 import { keywordTypeFields, keywordTypeOf, optionField } from '@/components/search/optionFields';
 import { allToUndef, timeParams, ymdRange } from '@/components/search/params';
-import type { DetailItem } from '@/components/display/DetailGrid';
-import { fmtAcctNo, fmtAmount, fmtDate, fmtOffice } from '@/utils/format';
+import { fmtAcctNo, fmtAmount } from '@/utils/format';
 import { compactParams } from '@/utils/object';
 import type { Option } from '@/types/common';
-import type { Jnal, JnalField, JnalSearch, JnalTypeCode, JrnlProcRestCode } from '@/domain/jnal';
+import type { JournalListRow, JnalField, JournalListSearch, JnalTypeCode, JrnlProcRestCode } from '@/domain/journalList';
 
-/* ---------- 0. 설정값 (서버 JnalRules 와 같음) ---------- */
+/* ---------- 0. 설정값 (서버 JournalListRules 와 같음) ---------- */
 /** 한 번에 볼 수 있는 최대 일수 */
 export const MAX_DAYS = 2;
 /** IT부문 사무소코드 — 관리자가 아니면 조회조건(계좌·수표·명세표)을 쓰지 않는다(As-Is 2020.09 개인정보 조회 제한) */
@@ -73,33 +72,30 @@ export const jnalTypeText = (t?: string | null): string => {
 
 const PROC_REST_TEXT: Record<string, string> = { '01': '정상', '02': '불능', '97': '취소정상', '98': '취소불능', '99': '확인요망', '77': '고객조작취소' };
 /** 거래결과 표시 — 운영(55) 저널은 빈칸 */
-export const procRestText = (r: Pick<Jnal, 'jnalType' | 'jrnlProcRest'>): string => (r.jnalType === '55' ? '' : PROC_REST_TEXT[r.jrnlProcRest ?? ''] ?? '');
+export const procRestText = (r: Pick<JournalListRow, 'jnalType' | 'jrnlProcRest'>): string => (r.jnalType === '55' ? '' : PROC_REST_TEXT[r.jrnlProcRest ?? ''] ?? '');
 
 /** 계좌/카드번호/수표번호 두 줄 — 계좌 하이픈, 수표가 있으면 둘째 줄 '(수표앞8[n건])' */
-export const acctLines = (r: Pick<Jnal, 'acctNo' | 'estbBankCode' | 'chkCnt' | 'chkNos'>): string[] => [
+export const acctLines = (r: Pick<JournalListRow, 'acctNo' | 'estbBankCode' | 'chkCnt' | 'chkNos'>): string[] => [
   r.acctNo ? fmtAcctNo(r.acctNo, r.estbBankCode) : '',
   r.chkCnt && r.chkCnt > 0 ? `(${(r.chkNos ?? '').slice(0, 8)}[${r.chkCnt}건])` : '',
 ];
 
 /** 거래금액 — 개국(11)·운영(55)은 빈칸 */
-export const amountText = (r: Pick<Jnal, 'jnalType' | 'dealAmt'>): string => (r.jnalType === '11' || r.jnalType === '55' ? '' : fmtAmount(r.dealAmt, { dash: '' }));
+export const amountText = (r: Pick<JournalListRow, 'jnalType' | 'dealAmt'>): string => (r.jnalType === '11' || r.jnalType === '55' ? '' : fmtAmount(r.dealAmt, { dash: '' }));
 
 /** 운영내용 — 운영(55) 저널의 후인자(잠정 Q-37: As-Is 원문 줄이 없어 후인자 그대로) */
-export const opText = (r: Pick<Jnal, 'jnalType' | 'aftComt'>): string => (r.jnalType === '55' ? (r.aftComt ?? '') : '');
-
-/** 상세 팝업을 열 수 있는 행(운영 저널 제외) */
-export const hasDetail = (r: Pick<Jnal, 'jnalType'>): boolean => r.jnalType !== '55';
+export const opText = (r: Pick<JournalListRow, 'jnalType' | 'aftComt'>): string => (r.jnalType === '55' ? (r.aftComt ?? '') : '');
 
 /** 롤방식 글 — 행마다 인자 글(합친 것 모두)을 구분선으로 이어 붙인다(잠정 Q-37) */
 export const ROLL_SEPARATOR = `\n\n${'='.repeat(48)}\n\n`;
-export const rollText = (rows: Pick<Jnal, 'rolComts'>[]): string => rows.flatMap((r) => r.rolComts).join(ROLL_SEPARATOR);
+export const rollText = (rows: Pick<JournalListRow, 'rolComts'>[]): string => rows.flatMap((r) => r.rolComts).join(ROLL_SEPARATOR);
 
 /* ---------- 2. 조회조건 (모두 공통 필드, 배치 = 피그마) ---------- */
 /**
  * 1행 사무소·거래결과, 2행 기번·저널구분, 상세 필터 = 저널일자(최대 2일)·저널시간(시 단위)·조회조건·검색어.
  * canPick = 권한 A·T·L(또는 관리자) → 사무소를 고름, 아니면 내 사무소 고정. itRestricted = 조회조건·검색어 칸 없음.
  */
-export const useJnalFields = (canPick: boolean, myOfc: string, itRestricted: boolean): SearchField[] =>
+export const useJournalListFields = (canPick: boolean, myOfc: string, itRestricted: boolean): SearchField[] =>
   useMemo(
     () => [
       canPick ? officeField({ defaultValue: myOfc || undefined }) : officeField({ disabled: true, defaultValue: myOfc }),
@@ -121,11 +117,11 @@ export const useJnalFields = (canPick: boolean, myOfc: string, itRestricted: boo
   );
 
 /* ---------- 3. 조건값 → API 파라미터 ---------- */
-export const toJnalParams = (v: Record<string, unknown>): JnalSearch => {
+export const toJournalListParams = (v: Record<string, unknown>): JournalListSearch => {
   const { fromDate, toDate } = ymdRange(v.period);
   const { fromTime, toTime } = timeParams(v.time);
   const { field, keyword } = keywordTypeOf<JnalField>(v);
-  return compactParams<JnalSearch>({
+  return compactParams<JournalListSearch>({
     ofcCode: String(v.ofcCode ?? ''),
     mcnNo: String(v.mcnNo ?? ''),
     fromDate,
@@ -136,16 +132,5 @@ export const toJnalParams = (v: Record<string, unknown>): JnalSearch => {
     jrnlProcRest: allToUndef(v.jrnlProcRest) as JrnlProcRestCode | undefined,
     field,
     keyword,
-  }) as JnalSearch;
+  }) as JournalListSearch;
 };
-
-/* ---------- 4. 명세서(상세 팝업 첫 탭) 항목 — 피그마 팝업 순서 ---------- */
-export const slipItems = (r: Jnal, officeLabel: string): DetailItem[] => [
-  { label: '사무소', value: officeLabel || fmtOffice(r.ofcCode), span: 2 },
-  { label: '거래일', value: fmtDate(r.dealDate) },
-  { label: '취급점_기번_일련번호', value: <span className="mono">{`${r.ofcCode}_${r.mcnNo}_${r.dtlsSeqno ?? ''}`}</span> },
-  { label: '매체', value: r.mdnType },
-  { label: '개설은행', value: r.estbBankCode },
-  { label: '계좌/카드번호', value: r.acctNo ? fmtAcctNo(r.acctNo, r.estbBankCode) : undefined, span: 2 },
-  { label: '거래금액', value: amountText(r) ? `₩ ${amountText(r)}` : undefined, span: 2 },
-];

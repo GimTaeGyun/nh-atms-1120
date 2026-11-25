@@ -1,5 +1,5 @@
 /**
- * 저널조회(`jnal.jnalList`, TB_JL_JNAL) 타입 — API 계약 §13 과 글자 하나까지 같다.
+ * 저널조회(`journal.journalList`, TB_JL_JNAL) 타입 — API 계약 §13 과 글자 하나까지 같다.
  */
 
 /** 저널구분 조건 — 22 일반·33 수표·11 개국·44 합계·55 운영 (응답에는 00 도 있음) */
@@ -9,8 +9,8 @@ export type JrnlProcRestCode = '01' | '02' | '97' | '98' | '99';
 /** 조회조건 — 계좌번호·수표번호·명세표일련번호 */
 export type JnalField = 'ACCT' | 'CHK' | 'DTLS';
 
-/** `GET /api/web/jnal` 조건 — 페이지 없음(서버가 합친 전체 목록) */
-export interface JnalSearch {
+/** `GET /api/web/journal/journal-list` 조건 — 페이지 없음(서버가 합친 전체 목록) */
+export interface JournalListSearch {
   ofcCode: string;
   mcnNo: string;
   /** 저널일자 YYYYMMDD(최대 2일) */
@@ -27,7 +27,7 @@ export interface JnalSearch {
 }
 
 /** 저널 한 행 — 같은 명세표의 여러 저널은 서버가 합침(rolComts·dtlComts 목록) */
-export interface Jnal {
+export interface JournalListRow {
   jnalDt: string;
   jnalTime: string | null;
   jnalSeqno: string;
@@ -56,18 +56,4 @@ export interface Jnal {
   rolComts: string[];
   /** 후인자만 — 합친 저널마다 하나 */
   dtlComts: string[];
-}
-
-/** `GET /api/web/jnal/checks` 조건 = 저널 키 */
-export interface JnalCheckKey {
-  jnalDt: string;
-  ofcCode: string;
-  mcnNo: string;
-  jnalSeqno: string;
-}
-
-/** 저널 수표 한 장 */
-export interface JnalCheck {
-  seqno: string | null;
-  chkNo: string | null;
 }

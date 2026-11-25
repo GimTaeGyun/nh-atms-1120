@@ -1,4 +1,4 @@
-package kr.co.nh.atms.web.jnal.dto;
+package kr.co.nh.atms.web.journal.journallist.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,12 +6,12 @@ import lombok.ToString;
 
 /**
  * 저널조회 조건 — API 계약 §13 {@code JnalSearch}. 페이지 없음(서버가 합친 전체 목록, 화면이 20건씩 나눠 보임).
- * 서비스(JnalRules.normalize)가 값을 정리한다. 테이블은 TB_JL_JNAL(+_CHK)만.
+ * 서비스(JournalListRules.normalize)가 값을 정리한다. 테이블은 TB_JL_JNAL(+_CHK)만.
  */
 @Getter
 @Setter
 @ToString
-public class JnalSearchDto {
+public class JournalListSearchDto {
     /** 사무소코드(필수). 권한 A·T·L 이 아니면 내 사무소로 덮어씀 */
     private String ofcCode;
     /** 기번(필수, 3자리) */

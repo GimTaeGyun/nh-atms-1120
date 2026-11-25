@@ -2,19 +2,19 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!--
-  저널조회(jnal.jnalList) — API 계약 §13. As-Is 저널조회 SQL(AjmList.sql)을 옮김.
+  저널조회(journal.journalList) — API 계약 §13. As-Is 저널조회 SQL(AjmList.sql)을 옮김.
   - TB_JL_JNAL + TB_JL_JNAL_CHK 만(2026-11-24 사용자 결정 — As-Is 의 ILM 분기는 2차 파기(5년) 경계라 이 화면에선 쓰지 않음, Q-34)
-  - RN = 저널일자·시간·일련번호 내림차순, P_RN = 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번 → 서비스가 As-Is 대로 합친다(JnalRules.merge)
-  - 거래명 = TB_CODE_DTL(CODE_SECT '01') 코드명(As-Is 화면도 같은 표로 채움), 특수 거래명은 서비스(JnalRules.scrNm)
+  - RN = 저널일자·시간·일련번호 내림차순, P_RN = 같은 날·같은 명세표(22·33 은 00 으로 봄) 안 순번 → 서비스가 As-Is 대로 합친다(JournalListRules.merge)
+  - 거래명 = TB_CODE_DTL(CODE_SECT '01') 코드명(As-Is 화면도 같은 표로 채움), 특수 거래명은 서비스(JournalListRules.scrNm)
   - 수표 묶음 B: 수표번호 9번째 바이트가 00 이면 앞 8자리, 14자리로 맞춰 ',' 로 이음(As-Is 그대로)
   - 바뀐 점: :바인드 → #{}, CHAR 비교 CAST, 인덱스 힌트(TO-BE 인덱스 이름 모름)·스키마 접두어 뺌,
     수표 묶음은 조회조건이 수표번호일 때만 거름(As-Is 는 계좌·명세표 검색 때 수표 칸이 비었음),
     수표번호 검색 = 수표 묶음에 걸린 행만(As-Is 본 쿼리에 분기가 없어 0건 — 잠정 Q-36)
   - ${} 금지
 -->
-<mapper namespace="kr.co.nh.atms.web.jnal.mapper.JnalMapper">
+<mapper namespace="kr.co.nh.atms.web.journal.journallist.mapper.JournalListMapper">
 
-    <select id="selectList" resultType="kr.co.nh.atms.web.jnal.dto.Jnal">
+    <select id="selectList" resultType="kr.co.nh.atms.web.journal.journallist.dto.JournalListRow">
         SELECT ROW_NUMBER() OVER (ORDER BY A.JNAL_DT DESC, A.JNAL_TIME DESC, A.JNAL_SEQNO DESC) AS RN,
                ROW_NUMBER() OVER (PARTITION BY A.JNAL_DT, A.DTLS_SEQNO, DECODE(A.JNAL_TYPE, '22', '00', '33', '00', A.JNAL_TYPE)
                                   ORDER BY A.JNAL_DT DESC, A.JNAL_TIME DESC, A.JNAL_SEQNO DESC) AS P_RN,
@@ -95,17 +95,6 @@
             </when>
         </choose>
          ORDER BY RN
-    </select>
-
-    <select id="selectChecks" resultType="kr.co.nh.atms.web.jnal.dto.JnalCheck">
-        SELECT C.SEQNO,
-               C.CHK_NO
-          FROM TB_JL_JNAL_CHK C
-         WHERE C.JNAL_DT = CAST(#{jnalDt} AS CHAR(8))
-           AND C.OFC_CODE = CAST(#{ofcCode} AS CHAR(6))
-           AND C.MCN_NO = CAST(#{mcnNo} AS CHAR(3))
-           AND C.JNAL_SEQNO = CAST(#{jnalSeqno} AS CHAR(6))
-         ORDER BY C.SEQNO
     </select>
 
 </mapper>

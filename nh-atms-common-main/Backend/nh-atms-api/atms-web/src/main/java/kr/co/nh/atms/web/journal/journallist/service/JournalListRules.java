@@ -1,11 +1,10 @@
-package kr.co.nh.atms.web.jnal.service;
+package kr.co.nh.atms.web.journal.journallist.service;
 
 import kr.co.nh.atms.common.exception.BusinessException;
 import kr.co.nh.atms.web.common.Dates;
 import kr.co.nh.atms.web.common.OfficeCode;
-import kr.co.nh.atms.web.jnal.dto.Jnal;
-import kr.co.nh.atms.web.jnal.dto.JnalCheckKey;
-import kr.co.nh.atms.web.jnal.dto.JnalSearchDto;
+import kr.co.nh.atms.web.journal.journallist.dto.JournalListRow;
+import kr.co.nh.atms.web.journal.journallist.dto.JournalListSearchDto;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -16,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 저널조회 규칙 한 곳(2026-11-24 사용자 결정, As-Is 저널조회 화면 스크립트·인클루드 근거) — 단위 테스트 {@code JnalRulesTest}.
+ * 저널조회 규칙 한 곳(2026-11-24 사용자 결정, As-Is 저널조회 화면 스크립트·인클루드 근거) — 단위 테스트 {@code JournalListRulesTest}.
  * <ul>
  *   <li>사무소·기번·저널일자 필수(VAL_002), 형식(VAL_003), 시작 ≤ 끝·최대 {@value #MAX_DAYS}일(VAL_001) — As-Is "사무소,기번 및 일자는 필수", "최대 2일"</li>
  *   <li>2차 파기: 시작일 ≤ 오늘 − 5년이면 JNL_001 — 인클루드 {@code chkLim}</li>
@@ -28,8 +27,8 @@ import java.util.regex.Pattern;
  *       2차 파기(5년) 경계라 위 JNL_001 에 먼저 막힌다 — TB_JL_JNAL_ILM 은 저널 2차 파기 조회 화면 몫(Q-34)</li>
  * </ul>
  */
-public final class JnalRules {
-    private JnalRules() {}
+public final class JournalListRules {
+    private JournalListRules() {}
 
     /** 한 번에 볼 수 있는 최대 일수(양끝 포함) */
     public static final int MAX_DAYS = 2;
@@ -70,7 +69,7 @@ public final class JnalRules {
         return IT_OFC_CODE.equals(OfficeCode.norm(myOfc));
     }
 
-    public static void normalize(JnalSearchDto s, String auth, boolean admin, String myOfc, String today) {
+    public static void normalize(JournalListSearchDto s, String auth, boolean admin, String myOfc, String today) {
         s.setOfcCode(office(s.getOfcCode(), auth, admin, myOfc));
         s.setMcnNo(mcnNo(s.getMcnNo()));
 
@@ -100,21 +99,6 @@ public final class JnalRules {
         search(s, itRestricted(myOfc, admin));
     }
 
-    /** 수표목록 키 정리 — 사무소·기번·일자 규칙은 목록과 같다(다른 사무소·파기 대상 저널을 키로 직접 읽지 못하게) */
-    public static void normalizeKey(JnalCheckKey k, String auth, boolean admin, String myOfc, String today) {
-        k.setOfcCode(office(k.getOfcCode(), auth, admin, myOfc));
-        k.setMcnNo(mcnNo(k.getMcnNo()));
-        String dt = trimToNull(k.getJnalDt());
-        if (dt == null) throw new BusinessException("VAL_002", "jnalDt");
-        if (!isYmd(dt)) throw new BusinessException("VAL_003", "jnalDt");
-        String seq = trimToNull(k.getJnalSeqno());
-        if (seq == null) throw new BusinessException("VAL_002", "jnalSeqno");
-        if (seq.length() > 6) throw new BusinessException("VAL_003", "jnalSeqno");
-        destroyLimits(dt, auth, admin, today);
-        k.setJnalDt(dt);
-        k.setJnalSeqno(seq);
-    }
-
     /** 2차 파기(5년) JNL_001, 1차 파기(3개월) 조회 허가 JNL_002 — 인클루드 chkLim·chkPermitINQ */
     private static void destroyLimits(String from, String auth, boolean admin, String today) {
         LocalDate t = Dates.parseYmd(today);
@@ -138,7 +122,7 @@ public final class JnalRules {
     }
 
     /** 조회조건·검색어 → schData1·2. 저널구분에 없는 조회조건은 VAL_003(As-Is 콤보 setCB_search_if) */
-    private static void search(JnalSearchDto s, boolean restricted) {
+    private static void search(JournalListSearchDto s, boolean restricted) {
         String field = upper(s.getField());
         // 공백은 늘 떼고(As-Is 는 앞뒤 trim), 계좌는 하이픈도 뗀다 — 목록에 보이는 '301-12-345678' 을 그대로 붙여 넣어도 찾게
         String raw = s.getKeyword() == null ? null : s.getKeyword().replaceAll("\\s+", "");
@@ -179,10 +163,10 @@ public final class JnalRules {
      * As-Is rconcat — SQL 순서대로 돌며 저널구분이 55 가 아니고 명세표 안 순번(P_RN)이 1 이 아니면 바로 앞에 남긴 행에 합친다
      * (인자 글 목록에 '전인자\n후인자', 후인자 목록에 후인자, 거래금액 = 큰 값). 앞에 남긴 행이 없으면 그대로 한 행(As-Is 는 이때 오류).
      */
-    public static List<Jnal> merge(List<Jnal> rows) {
-        List<Jnal> out = new ArrayList<>(rows.size());
-        Jnal prev = null;
-        for (Jnal r : rows) {
+    public static List<JournalListRow> merge(List<JournalListRow> rows) {
+        List<JournalListRow> out = new ArrayList<>(rows.size());
+        JournalListRow prev = null;
+        for (JournalListRow r : rows) {
             String rol = nz(r.getBfoComt()) + "\n" + nz(r.getAftComt());
             String dtl = nz(r.getAftComt());
             boolean follow = !"55".equals(r.getJnalType()) && r.getPRn() != null && r.getPRn() != 1;

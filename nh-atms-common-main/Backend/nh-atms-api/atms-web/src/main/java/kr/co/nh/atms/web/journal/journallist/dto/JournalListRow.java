@@ -1,4 +1,4 @@
-package kr.co.nh.atms.web.jnal.dto;
+package kr.co.nh.atms.web.journal.journallist.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
@@ -8,13 +8,13 @@ import lombok.ToString;
 import java.util.List;
 
 /**
- * 저널 한 행 — API 계약 §13 {@code Jnal}. TB_JL_JNAL + 수표 묶음(TB_JL_JNAL_CHK) + 거래명(TB_CODE_DTL '01').
- * 같은 명세표의 여러 저널은 서버가 한 행으로 합친다(JnalRules.merge) — 인자 글은 rolComts·dtlComts 목록.
+ * 저널 한 행 — API 계약 §13 {@code JournalListRow}. TB_JL_JNAL + 수표 묶음(TB_JL_JNAL_CHK) + 거래명(TB_CODE_DTL '01').
+ * 같은 명세표의 여러 저널은 서버가 한 행으로 합친다(JournalListRules.merge) — 인자 글은 rolComts·dtlComts 목록.
  */
 @Getter
 @Setter
 @ToString
-public class Jnal {
+public class JournalListRow {
     private String jnalDt;
     private String jnalTime;
     private String jnalSeqno;
@@ -26,7 +26,7 @@ public class Jnal {
     private String jrnlProcRest;
     private String dealDate;
     private String scrNo;
-    /** 거래명 — JnalRules.scrNm */
+    /** 거래명 — JournalListRules.scrNm */
     private String scrNm;
     private String dtlsSeqno;
     private String acctNo;
