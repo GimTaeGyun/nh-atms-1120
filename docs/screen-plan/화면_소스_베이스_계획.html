@@ -1,0 +1,475 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>화면 소스 베이스 계획</title><style>
+:root{--bg:#f6f8fb;--panel:#fff;--fg:#1c2733;--muted:#5a6878;--line:#d9e1ea;--acc:#0a4a8a;--have:#eef6ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121821;--panel:#1a222d;--fg:#e4eaf1;--muted:#9aa8b8;--line:#2c3846;--acc:#7fb2e8;--have:#17301f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121821;--panel:#1a222d;--fg:#e4eaf1;--muted:#9aa8b8;--line:#2c3846;--acc:#7fb2e8;--have:#17301f;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-left,0px)) 40px}
+h1{font-size:20px}h2{font-size:16px;margin:26px 0 8px}h2 small{font-weight:400;color:var(--muted)}
+table{border-collapse:collapse;width:100%;background:var(--panel);font-size:13px;display:block;overflow-x:auto}td,th{border:1px solid var(--line);padding:4px 8px;text-align:left;white-space:nowrap}th{background:var(--bg)}
+tr.mid td{background:var(--bg)}tr.have td{background:var(--have)}pre.tree{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font:12px/1.45 Consolas,'D2Coding',monospace;overflow:auto;max-height:640px}code{font-family:Consolas,'D2Coding',monospace;font-size:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:12px 0}.box li{margin:3px 0}</style></head><body><div class='wrap'>
+<h1>화면 소스 베이스 계획 — 검토용</h1>
+<div class='box'><b>합계</b>: 화면 77개(번호 있음 74 + 신규 3) — 이미 있음 7 · <b>새로 70개</b> / 팝업 18개 — 이미 있음 1 · <b>새로 17개</b>. 녹색 줄 = 이미 있는 화면(그대로).
+<table style='margin-top:8px'><tr><th>26 뒤</th><th>대메뉴</th><th>slug</th><th>접두어</th><th>화면</th><th>있음</th></tr><tr><td>0</td><td>대시보드</td><td><code>main</code></td><td><code>DSB</code></td><td>2</td><td>1</td></tr><tr><td>1</td><td>거래관리</td><td><code>txn</code></td><td><code>TXN</code></td><td>1</td><td>0</td></tr><tr><td>3</td><td>종합관리</td><td><code>total</code></td><td><code>TOT</code></td><td>14</td><td>0</td></tr><tr><td>4</td><td>저널관리</td><td><code>journal</code></td><td><code>JNL</code></td><td>10</td><td>0</td></tr><tr><td>5</td><td>통계</td><td><code>stat</code></td><td><code>STA</code></td><td>7</td><td>0</td></tr><tr><td>6</td><td>일괄용역</td><td><code>outsource</code></td><td><code>OSC</code></td><td>33</td><td>1</td></tr><tr><td>7</td><td>관리자기능</td><td><code>admin</code></td><td><code>ADM</code></td><td>10</td><td>5</td></tr></table></div>
+<div class='box'><b>화면 하나에 만드는 것</b><ul>
+<li>백엔드 <code>web/&lt;slug&gt;/&lt;이름&gt;/</code> — <code>controller/&lt;Name&gt;Controller</code>(<code>GET /api/web/&lt;slug&gt;/&lt;kebab&gt;</code> 하나, 빈 목록, <code>@RequireMenuAuth(QRY)</code>), <code>service/&lt;Name&gt;Service</code>, <code>mapper/&lt;Name&gt;Mapper</code>(빈 인터페이스) + <code>resources/mapper/&lt;slug&gt;/&lt;Name&gt;Mapper.xml</code>(빈 자리), <code>dto/&lt;Name&gt;SearchDto</code>·<code>&lt;Name&gt;Row</code>(빈 틀)</li>
+<li>프론트 <code>screens/&lt;slug&gt;/&lt;Name&gt;Page.tsx</code>(제목 + '개발 예정' 안내), <code>&lt;Name&gt;Parts.tsx</code>·<code>&lt;Name&gt;Columns.tsx</code>(빈 틀), <code>api/endpoints</code>·<code>domain</code> 은 만들지 않음(개발 때), <code>screenIds.ts</code>(번호 주석)·<code>registry.ts</code> 등록</li>
+<li>메뉴 SQL 하나(새 대·중·소 메뉴 + 영업본부(T)·영업점(L) 조회 권한). 즐겨찾기는 메뉴 없음</li>
+<li>팝업: 프론트 <code>screens/popup/&lt;Name&gt;Modal.tsx</code>(제목만) + 백엔드 <code>web/popup/&lt;이름&gt;/</code> 틀 — 메뉴 없음, 관련 화면 없음 → 컨트롤러는 API 없이 빈 클래스(관련 화면이 정해지면 그 화면키 권한으로 API 추가)</li>
+<li>이미 있는 7개 화면의 백엔드 패키지(<code>web/notice</code> 등)는 옮기지 않음</li><li><b>2026-11-24 변경</b>: 일괄용역 slug <code>bulk</code> → <code>outsource</code>, 메뉴ID 접두어 <code>BLK</code> → <code>OSC</code>. 이미 있는 SLA등급 이력조회도 함께: 화면키 <code>outsource.slaGradeHist</code>, 경로 <code>/outsource/sla-grade-hist</code>, 폴더 <code>screens/outsource/</code>, 메뉴 <code>OSC0000·OSC0100·OSC0101</code>(menu_by_screen_no.sql 의 BLK 도 OSC 로)</li></ul></div>
+<h2>0 · 대시보드 <small><code>main</code> · 메뉴ID <code>DSB0000</code> · 순서 0</small></h2><table><tr><th>번호</th><th>화면명</th><th>메뉴ID</th><th>화면키</th><th>경로</th><th>프론트 파일(screens/main/)</th><th>백엔드 패키지</th><th>상태</th></tr><tr class='mid'><td colspan='8'><b>대시보드</b> <code>DSB0100</code></td></tr><tr class='have'><td>260000</td><td>농협은행 자동화기기(대시보드)</td><td><code>DSB0101</code></td><td><code>main.dashboard</code></td><td><code>/main/dashboard</code></td><td><code>DashboardPage·Parts·Columns</code></td><td><code>web/dashboard (그대로)</code></td><td>있음</td></tr><tr><td>신규</td><td>즐겨찾기</td><td>(메뉴 없음)</td><td><code>main.favorite</code></td><td><code>/main/favorite</code></td><td><code>FavoritePage·Parts·Columns</code></td><td><code>web/main/favorite</code></td><td>새(메뉴 없음)</td></tr></table><h2>1 · 거래관리 <small><code>txn</code> · 메뉴ID <code>TXN0000</code> · 순서 10</small></h2><table><tr><th>번호</th><th>화면명</th><th>메뉴ID</th><th>화면키</th><th>경로</th><th>프론트 파일(screens/txn/)</th><th>백엔드 패키지</th><th>상태</th></tr><tr class='mid'><td colspan='8'><b>거래조회</b> <code>TXN0100</code></td></tr><tr class=''><td>261000</td><td>거래 전표 조회</td><td><code>TXN0101</code></td><td><code>txn.txnSlip</code></td><td><code>/txn/txn-slip</code></td><td><code>TxnSlipPage·Parts·Columns</code></td><td><code>web/txn/txnslip</code></td><td>새</td></tr></table><h2>3 · 종합관리 <small><code>total</code> · 메뉴ID <code>TOT0000</code> · 순서 30</small></h2><table><tr><th>번호</th><th>화면명</th><th>메뉴ID</th><th>화면키</th><th>경로</th><th>프론트 파일(screens/total/)</th><th>백엔드 패키지</th><th>상태</th></tr><tr class='mid'><td colspan='8'><b>기기관리</b> <code>TOT0100</code></td></tr><tr class=''><td>263000</td><td>자동화기기 설치코너 관리</td><td><code>TOT0101</code></td><td><code>total.cornerMgt</code></td><td><code>/total/corner-mgt</code></td><td><code>CornerMgtPage·Parts·Columns</code></td><td><code>web/total/cornermgt</code></td><td>새</td></tr><tr class=''><td>263001</td><td>자동화기기 합계/폐국 예약</td><td><code>TOT0102</code></td><td><code>total.closeReserve</code></td><td><code>/total/close-reserve</code></td><td><code>CloseReservePage·Parts·Columns</code></td><td><code>web/total/closereserve</code></td><td>새</td></tr><tr class=''><td>263002</td><td>알림설정</td><td><code>TOT0103</code></td><td><code>total.alarmSetting</code></td><td><code>/total/alarm-setting</code></td><td><code>AlarmSettingPage·Parts·Columns</code></td><td><code>web/total/alarmsetting</code></td><td>새</td></tr><tr class=''><td>263202</td><td>자동화기기 자산현황</td><td><code>TOT0104</code></td><td><code>total.assetStatus</code></td><td><code>/total/asset-status</code></td><td><code>AssetStatusPage·Parts·Columns</code></td><td><code>web/total/assetstatus</code></td><td>새</td></tr><tr class=''><td>신규</td><td>자동화기기 신설•폐쇄 확인</td><td><code>TOT0105</code></td><td><code>total.openCloseCheck</code></td><td><code>/total/open-close-check</code></td><td><code>OpenCloseCheckPage·Parts·Columns</code></td><td><code>web/total/openclosecheck</code></td><td>새</td></tr><tr class=''><td>263204</td><td>자동화기기 위치조회</td><td><code>TOT0106</code></td><td><code>total.mcnLocation</code></td><td><code>/total/mcn-location</code></td><td><code>McnLocationPage·Parts·Columns</code></td><td><code>web/total/mcnlocation</code></td><td>새</td></tr><tr class=''><td>263205</td><td>글로벌ATM/바이오인증 위치조회</td><td><code>TOT0107</code></td><td><code>total.globalAtmLocation</code></td><td><code>/total/global-atm-location</code></td><td><code>GlobalAtmLocationPage·Parts·Columns</code></td><td><code>web/total/globalatmlocation</code></td><td>새</td></tr><tr class=''><td>263207</td><td>STM 매체현황 조회</td><td><code>TOT0108</code></td><td><code>total.stmMedia</code></td><td><code>/total/stm-media</code></td><td><code>StmMediaPage·Parts·Columns</code></td><td><code>web/total/stmmedia</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>장애관리</b> <code>TOT0200</code></td></tr><tr class=''><td>263100</td><td>장애 현황</td><td><code>TOT0201</code></td><td><code>total.faultStatus</code></td><td><code>/total/fault-status</code></td><td><code>FaultStatusPage·Parts·Columns</code></td><td><code>web/total/faultstatus</code></td><td>새</td></tr><tr class=''><td>263101</td><td>장애내역 조회</td><td><code>TOT0202</code></td><td><code>total.faultHist</code></td><td><code>/total/fault-hist</code></td><td><code>FaultHistPage·Parts·Columns</code></td><td><code>web/total/faulthist</code></td><td>새</td></tr><tr class=''><td>263103</td><td>장애통보 현황</td><td><code>TOT0203</code></td><td><code>total.faultNotice</code></td><td><code>/total/fault-notice</code></td><td><code>FaultNoticePage·Parts·Columns</code></td><td><code>web/total/faultnotice</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>시재관리</b> <code>TOT0300</code></td></tr><tr class=''><td>263203</td><td>자동화기기 시재확인</td><td><code>TOT0301</code></td><td><code>total.cashCheck</code></td><td><code>/total/cash-check</code></td><td><code>CashCheckPage·Parts·Columns</code></td><td><code>web/total/cashcheck</code></td><td>새</td></tr><tr class=''><td>263209</td><td>외화ATM 시재요청 및 확인</td><td><code>TOT0302</code></td><td><code>total.fxCashRequest</code></td><td><code>/total/fx-cash-request</code></td><td><code>FxCashRequestPage·Parts·Columns</code></td><td><code>web/total/fxcashrequest</code></td><td>새</td></tr><tr class=''><td>263210</td><td>글로벌ATM 현황</td><td><code>TOT0303</code></td><td><code>total.globalAtmStatus</code></td><td><code>/total/global-atm-status</code></td><td><code>GlobalAtmStatusPage·Parts·Columns</code></td><td><code>web/total/globalatmstatus</code></td><td>새</td></tr></table><h2>4 · 저널관리 <small><code>journal</code> · 메뉴ID <code>JNL0000</code> · 순서 40</small></h2><table><tr><th>번호</th><th>화면명</th><th>메뉴ID</th><th>화면키</th><th>경로</th><th>프론트 파일(screens/journal/)</th><th>백엔드 패키지</th><th>상태</th></tr><tr class='mid'><td colspan='8'><b>저널조회</b> <code>JNL0100</code></td></tr><tr class=''><td>264000</td><td>저널조회</td><td><code>JNL0101</code></td><td><code>journal.journalList</code></td><td><code>/journal/journal-list</code></td><td><code>JournalListPage·Parts·Columns</code></td><td><code>web/journal/journallist</code></td><td>새</td></tr><tr class=''><td>264001</td><td>저널업무 개시현황</td><td><code>JNL0102</code></td><td><code>journal.openStatus</code></td><td><code>/journal/open-status</code></td><td><code>OpenStatusPage·Parts·Columns</code></td><td><code>web/journal/openstatus</code></td><td>새</td></tr><tr class=''><td>264002</td><td>저널이미지 권한 관리</td><td><code>JNL0103</code></td><td><code>journal.imageAuth</code></td><td><code>/journal/image-auth</code></td><td><code>ImageAuthPage·Parts·Columns</code></td><td><code>web/journal/imageauth</code></td><td>새</td></tr><tr class=''><td>264003</td><td>저널이미지 열람 기록 관리</td><td><code>JNL0104</code></td><td><code>journal.imageViewLog</code></td><td><code>/journal/image-view-log</code></td><td><code>ImageViewLogPage·Parts·Columns</code></td><td><code>web/journal/imageviewlog</code></td><td>새</td></tr><tr class=''><td>264020</td><td>저널 2차 파기 조회</td><td><code>JNL0105</code></td><td><code>journal.secondPurge</code></td><td><code>/journal/second-purge</code></td><td><code>SecondPurgePage·Parts·Columns</code></td><td><code>web/journal/secondpurge</code></td><td>새</td></tr><tr class=''><td>264101</td><td>운영환경 설정</td><td><code>JNL0106</code></td><td><code>journal.opConfig</code></td><td><code>/journal/op-config</code></td><td><code>OpConfigPage·Parts·Columns</code></td><td><code>web/journal/opconfig</code></td><td>새</td></tr><tr class=''><td>264104</td><td>저널처리 유형별 집계</td><td><code>JNL0107</code></td><td><code>journal.typeSummary</code></td><td><code>/journal/type-summary</code></td><td><code>TypeSummaryPage·Parts·Columns</code></td><td><code>web/journal/typesummary</code></td><td>새</td></tr><tr class=''><td>264105</td><td>저널 운영현황</td><td><code>JNL0108</code></td><td><code>journal.opStatus</code></td><td><code>/journal/op-status</code></td><td><code>OpStatusPage·Parts·Columns</code></td><td><code>web/journal/opstatus</code></td><td>새</td></tr><tr class=''><td>264200</td><td>저널처리 일/월별 건수</td><td><code>JNL0109</code></td><td><code>journal.periodCount</code></td><td><code>/journal/period-count</code></td><td><code>PeriodCountPage·Parts·Columns</code></td><td><code>web/journal/periodcount</code></td><td>새</td></tr><tr class=''><td>264202</td><td>운영모드 운영률</td><td><code>JNL0110</code></td><td><code>journal.modeRate</code></td><td><code>/journal/mode-rate</code></td><td><code>ModeRatePage·Parts·Columns</code></td><td><code>web/journal/moderate</code></td><td>새</td></tr></table><h2>5 · 통계 <small><code>stat</code> · 메뉴ID <code>STA0000</code> · 순서 50</small></h2><table><tr><th>번호</th><th>화면명</th><th>메뉴ID</th><th>화면키</th><th>경로</th><th>프론트 파일(screens/stat/)</th><th>백엔드 패키지</th><th>상태</th></tr><tr class='mid'><td colspan='8'><b>관리자기능</b> <code>STA0100</code></td></tr><tr class=''><td>265102</td><td>자동화기기 홍보관리</td><td><code>STA0101</code></td><td><code>stat.promoMgt</code></td><td><code>/stat/promo-mgt</code></td><td><code>PromoMgtPage·Parts·Columns</code></td><td><code>web/stat/promomgt</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>통계</b> <code>STA0200</code></td></tr><tr class=''><td>265130</td><td>자동화기기 전국운영현황</td><td><code>STA0201</code></td><td><code>stat.nationOpStatus</code></td><td><code>/stat/nation-op-status</code></td><td><code>NationOpStatusPage·Parts·Columns</code></td><td><code>web/stat/nationopstatus</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>장애관리</b> <code>STA0300</code></td></tr><tr class=''><td>265160</td><td>자동화기기 가동률</td><td><code>STA0301</code></td><td><code>stat.opRate</code></td><td><code>/stat/op-rate</code></td><td><code>OpRatePage·Parts·Columns</code></td><td><code>web/stat/oprate</code></td><td>새</td></tr><tr class=''><td>265161</td><td>자동화기기 가동률 저하점</td><td><code>STA0302</code></td><td><code>stat.lowOpRate</code></td><td><code>/stat/low-op-rate</code></td><td><code>LowOpRatePage·Parts·Columns</code></td><td><code>web/stat/lowoprate</code></td><td>새</td></tr><tr class=''><td>265162</td><td>자동화기기 휴일 가동률</td><td><code>STA0303</code></td><td><code>stat.holidayOpRate</code></td><td><code>/stat/holiday-op-rate</code></td><td><code>HolidayOpRatePage·Parts·Columns</code></td><td><code>web/stat/holidayoprate</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>기기관리</b> <code>STA0400</code></td></tr><tr class=''><td>265500</td><td>일괄용역기기 정보 및 통계</td><td><code>STA0401</code></td><td><code>stat.outsourceMcnStat</code></td><td><code>/stat/outsource-mcn-stat</code></td><td><code>OutsourceMcnStatPage·Parts·Columns</code></td><td><code>web/stat/outsourcemcnstat</code></td><td>새</td></tr><tr class=''><td>265555</td><td>현금사용량 집계</td><td><code>STA0402</code></td><td><code>stat.cashUsage</code></td><td><code>/stat/cash-usage</code></td><td><code>CashUsagePage·Parts·Columns</code></td><td><code>web/stat/cashusage</code></td><td>새</td></tr></table><h2>6 · 일괄용역 <small><code>outsource</code> · 메뉴ID <code>OSC0000</code> · 순서 60</small></h2><table><tr><th>번호</th><th>화면명</th><th>메뉴ID</th><th>화면키</th><th>경로</th><th>프론트 파일(screens/outsource/)</th><th>백엔드 패키지</th><th>상태</th></tr><tr class='mid'><td colspan='8'><b>기기관리</b> <code>OSC0200</code></td></tr><tr class=''><td>266000</td><td>기기상태 조회</td><td><code>OSC0201</code></td><td><code>outsource.mcnState</code></td><td><code>/outsource/mcn-state</code></td><td><code>McnStatePage·Parts·Columns</code></td><td><code>web/outsource/mcnstate</code></td><td>새</td></tr><tr class=''><td>266001</td><td>기기상태이력 조회</td><td><code>OSC0202</code></td><td><code>outsource.mcnStateHist</code></td><td><code>/outsource/mcn-state-hist</code></td><td><code>McnStateHistPage·Parts·Columns</code></td><td><code>web/outsource/mcnstatehist</code></td><td>새</td></tr><tr class=''><td>266003</td><td>개국및거래현황 조회</td><td><code>OSC0203</code></td><td><code>outsource.openTxnStatus</code></td><td><code>/outsource/open-txn-status</code></td><td><code>OpenTxnStatusPage·Parts·Columns</code></td><td><code>web/outsource/opentxnstatus</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>장애관리</b> <code>OSC0300</code></td></tr><tr class=''><td>266002</td><td>업체 출동 현황조회</td><td><code>OSC0301</code></td><td><code>outsource.dispatchStatus</code></td><td><code>/outsource/dispatch-status</code></td><td><code>DispatchStatusPage·Parts·Columns</code></td><td><code>web/outsource/dispatchstatus</code></td><td>새</td></tr><tr class=''><td>266004</td><td>2차출동 현황</td><td><code>OSC0302</code></td><td><code>outsource.secondDispatch</code></td><td><code>/outsource/second-dispatch</code></td><td><code>SecondDispatchPage·Parts·Columns</code></td><td><code>web/outsource/seconddispatch</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>마감관리</b> <code>OSC0400</code></td></tr><tr class=''><td>266100</td><td>시재조회</td><td><code>OSC0401</code></td><td><code>outsource.cashInquiry</code></td><td><code>/outsource/cash-inquiry</code></td><td><code>CashInquiryPage·Parts·Columns</code></td><td><code>web/outsource/cashinquiry</code></td><td>새</td></tr><tr class=''><td>266101</td><td>마감내역 조회</td><td><code>OSC0402</code></td><td><code>outsource.closingHist</code></td><td><code>/outsource/closing-hist</code></td><td><code>ClosingHistPage·Parts·Columns</code></td><td><code>web/outsource/closinghist</code></td><td>새</td></tr><tr class=''><td>266102</td><td>미처리내역 조회</td><td><code>OSC0403</code></td><td><code>outsource.unprocessed</code></td><td><code>/outsource/unprocessed</code></td><td><code>UnprocessedPage·Parts·Columns</code></td><td><code>web/outsource/unprocessed</code></td><td>새</td></tr><tr class=''><td>266103</td><td>용역마감대사</td><td><code>OSC0404</code></td><td><code>outsource.closingRecon</code></td><td><code>/outsource/closing-recon</code></td><td><code>ClosingReconPage·Parts·Columns</code></td><td><code>web/outsource/closingrecon</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>현송관리</b> <code>OSC0500</code></td></tr><tr class=''><td>266104</td><td>운영자금대사</td><td><code>OSC0501</code></td><td><code>outsource.fundRecon</code></td><td><code>/outsource/fund-recon</code></td><td><code>FundReconPage·Parts·Columns</code></td><td><code>web/outsource/fundrecon</code></td><td>새</td></tr><tr class=''><td>266105</td><td>정규현송계획내역 조회</td><td><code>OSC0502</code></td><td><code>outsource.regularTransport</code></td><td><code>/outsource/regular-transport</code></td><td><code>RegularTransportPage·Parts·Columns</code></td><td><code>web/outsource/regulartransport</code></td><td>새</td></tr><tr class=''><td>266106</td><td>추가현송내역 조회</td><td><code>OSC0503</code></td><td><code>outsource.extraTransport</code></td><td><code>/outsource/extra-transport</code></td><td><code>ExtraTransportPage·Parts·Columns</code></td><td><code>web/outsource/extratransport</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>SLA관리</b> <code>OSC0100</code></td></tr><tr class=''><td>266107</td><td>반환금액상세조회</td><td><code>OSC0102</code></td><td><code>outsource.refundDetail</code></td><td><code>/outsource/refund-detail</code></td><td><code>RefundDetailPage·Parts·Columns</code></td><td><code>web/outsource/refunddetail</code></td><td>새</td></tr><tr class=''><td>266200</td><td>용역업체SLA등급조회</td><td><code>OSC0103</code></td><td><code>outsource.slaGrade</code></td><td><code>/outsource/sla-grade</code></td><td><code>SlaGradePage·Parts·Columns</code></td><td><code>web/outsource/slagrade</code></td><td>새</td></tr><tr class='have'><td>266201</td><td>용역업체SLA등급 이력조회</td><td><code>OSC0101</code></td><td><code>outsource.slaGradeHist</code></td><td><code>/outsource/sla-grade-hist</code></td><td><code>SlaGradeHistPage·Parts·Columns</code></td><td><code>web/slagradehist (그대로)</code></td><td>있음</td></tr><tr class=''><td>266202</td><td>코너별SLA평가점수조회</td><td><code>OSC0104</code></td><td><code>outsource.cornerSlaScore</code></td><td><code>/outsource/corner-sla-score</code></td><td><code>CornerSlaScorePage·Parts·Columns</code></td><td><code>web/outsource/cornerslascore</code></td><td>새</td></tr><tr class=''><td>266203</td><td>기기별가동율이력조회</td><td><code>OSC0105</code></td><td><code>outsource.mcnOpRateHist</code></td><td><code>/outsource/mcn-op-rate-hist</code></td><td><code>McnOpRateHistPage·Parts·Columns</code></td><td><code>web/outsource/mcnopratehist</code></td><td>새</td></tr><tr class=''><td>신규</td><td>SLA 소명 자료 자동화</td><td><code>OSC0106</code></td><td><code>outsource.slaExplain</code></td><td><code>/outsource/sla-explain</code></td><td><code>SlaExplainPage·Parts·Columns</code></td><td><code>web/outsource/slaexplain</code></td><td>새</td></tr><tr class=''><td>266204</td><td>기기별장애이력조회</td><td><code>OSC0107</code></td><td><code>outsource.mcnFaultHist</code></td><td><code>/outsource/mcn-fault-hist</code></td><td><code>McnFaultHistPage·Parts·Columns</code></td><td><code>web/outsource/mcnfaulthist</code></td><td>새</td></tr><tr class=''><td>266205</td><td>용역업체별코너환경평가관리</td><td><code>OSC0108</code></td><td><code>outsource.cornerEnvEval</code></td><td><code>/outsource/corner-env-eval</code></td><td><code>CornerEnvEvalPage·Parts·Columns</code></td><td><code>web/outsource/cornerenveval</code></td><td>새</td></tr><tr class=''><td>266206</td><td>용역업체별C/S평가관리</td><td><code>OSC0109</code></td><td><code>outsource.csEval</code></td><td><code>/outsource/cs-eval</code></td><td><code>CsEvalPage·Parts·Columns</code></td><td><code>web/outsource/cseval</code></td><td>새</td></tr><tr class=''><td>266207</td><td>용역업체별C/S이력관리</td><td><code>OSC0110</code></td><td><code>outsource.csHist</code></td><td><code>/outsource/cs-hist</code></td><td><code>CsHistPage·Parts·Columns</code></td><td><code>web/outsource/cshist</code></td><td>새</td></tr><tr class=''><td>266208</td><td>평가기준관리</td><td><code>OSC0111</code></td><td><code>outsource.evalStd</code></td><td><code>/outsource/eval-std</code></td><td><code>EvalStdPage·Parts·Columns</code></td><td><code>web/outsource/evalstd</code></td><td>새</td></tr><tr class=''><td>266209</td><td>P&amp;I등급관리</td><td><code>OSC0112</code></td><td><code>outsource.pniGrade</code></td><td><code>/outsource/pni-grade</code></td><td><code>PniGradePage·Parts·Columns</code></td><td><code>web/outsource/pnigrade</code></td><td>새</td></tr><tr class=''><td>266210</td><td>미가동사유관리</td><td><code>OSC0113</code></td><td><code>outsource.downReason</code></td><td><code>/outsource/down-reason</code></td><td><code>DownReasonPage·Parts·Columns</code></td><td><code>web/outsource/downreason</code></td><td>새</td></tr><tr class=''><td>266211</td><td>용역료기준관리</td><td><code>OSC0114</code></td><td><code>outsource.feeStd</code></td><td><code>/outsource/fee-std</code></td><td><code>FeeStdPage·Parts·Columns</code></td><td><code>web/outsource/feestd</code></td><td>새</td></tr><tr class=''><td>266212</td><td>용역료 산정</td><td><code>OSC0115</code></td><td><code>outsource.feeCalc</code></td><td><code>/outsource/fee-calc</code></td><td><code>FeeCalcPage·Parts·Columns</code></td><td><code>web/outsource/feecalc</code></td><td>새</td></tr><tr class=''><td>266213</td><td>미가동이력조회</td><td><code>OSC0116</code></td><td><code>outsource.downHist</code></td><td><code>/outsource/down-hist</code></td><td><code>DownHistPage·Parts·Columns</code></td><td><code>web/outsource/downhist</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>업체관리</b> <code>OSC0600</code></td></tr><tr class=''><td>266300</td><td>용역업체직원조회</td><td><code>OSC0601</code></td><td><code>outsource.vendStaff</code></td><td><code>/outsource/vend-staff</code></td><td><code>VendStaffPage·Parts·Columns</code></td><td><code>web/outsource/vendstaff</code></td><td>새</td></tr><tr class=''><td>266301</td><td>업체간 전문 송수신 이력</td><td><code>OSC0602</code></td><td><code>outsource.msgHist</code></td><td><code>/outsource/msg-hist</code></td><td><code>MsgHistPage·Parts·Columns</code></td><td><code>web/outsource/msghist</code></td><td>새</td></tr><tr class=''><td>266302</td><td>자동화기기·설치코너 관리</td><td><code>OSC0603</code></td><td><code>outsource.mcnCornerMgt</code></td><td><code>/outsource/mcn-corner-mgt</code></td><td><code>McnCornerMgtPage·Parts·Columns</code></td><td><code>web/outsource/mcncornermgt</code></td><td>새</td></tr><tr class=''><td>266303</td><td>용역업체등록관리</td><td><code>OSC0604</code></td><td><code>outsource.vendMgt</code></td><td><code>/outsource/vend-mgt</code></td><td><code>VendMgtPage·Parts·Columns</code></td><td><code>web/outsource/vendmgt</code></td><td>새</td></tr><tr class=''><td>266304</td><td>전산비용 청구액 산정</td><td><code>OSC0605</code></td><td><code>outsource.itCostCalc</code></td><td><code>/outsource/it-cost-calc</code></td><td><code>ItCostCalcPage·Parts·Columns</code></td><td><code>web/outsource/itcostcalc</code></td><td>새</td></tr></table><h2>7 · 관리자기능 <small><code>admin</code> · 메뉴ID <code>ADM0000</code> · 순서 70</small></h2><table><tr><th>번호</th><th>화면명</th><th>메뉴ID</th><th>화면키</th><th>경로</th><th>프론트 파일(screens/admin/)</th><th>백엔드 패키지</th><th>상태</th></tr><tr class='mid'><td colspan='8'><b>업무관리</b> <code>ADM0100</code></td></tr><tr class='have'><td>267000</td><td>공지사항</td><td><code>ADM0101</code></td><td><code>admin.notice</code></td><td><code>/admin/notice</code></td><td><code>NoticePage·Parts·Columns</code></td><td><code>web/notice (그대로)</code></td><td>있음</td></tr><tr class='have'><td>267100</td><td>시스템 사용권한부여(권한관리)</td><td><code>ADM0102</code></td><td><code>admin.authMgt</code></td><td><code>/admin/auth-mgt</code></td><td><code>AuthMgtPage·Parts·Columns</code></td><td><code>web/authmgt (그대로)</code></td><td>있음</td></tr><tr class='have'><td>267202</td><td>AriTAMS 코드관리(코드관리)</td><td><code>ADM0103</code></td><td><code>admin.codeMgt</code></td><td><code>/admin/code-mgt</code></td><td><code>CodeMgtPage·Parts·Columns</code></td><td><code>web/codemgt (그대로)</code></td><td>있음</td></tr><tr class=''><td>267205</td><td>기기원격지시(매체배포)</td><td><code>ADM0104</code></td><td><code>admin.remoteCmd</code></td><td><code>/admin/remote-cmd</code></td><td><code>RemoteCmdPage·Parts·Columns</code></td><td><code>web/admin/remotecmd</code></td><td>새</td></tr><tr class=''><td>267206</td><td>자동화기기 버전리스트</td><td><code>ADM0105</code></td><td><code>admin.versionList</code></td><td><code>/admin/version-list</code></td><td><code>VersionListPage·Parts·Columns</code></td><td><code>web/admin/versionlist</code></td><td>새</td></tr><tr class=''><td>267208</td><td>자동화기기 업체 코드관리</td><td><code>ADM0106</code></td><td><code>admin.vendCodeMgt</code></td><td><code>/admin/vend-code-mgt</code></td><td><code>VendCodeMgtPage·Parts·Columns</code></td><td><code>web/admin/vendcodemgt</code></td><td>새</td></tr><tr class='mid'><td colspan='8'><b>시스템관리</b> <code>ADM0200</code></td></tr><tr class='have'><td>268001</td><td>사용기록조회</td><td><code>ADM0201</code></td><td><code>admin.useLog</code></td><td><code>/admin/use-log</code></td><td><code>UseLogPage·Parts·Columns</code></td><td><code>web/uselog (그대로)</code></td><td>있음</td></tr><tr class=''><td>268002</td><td>환경변수관리</td><td><code>ADM0203</code></td><td><code>admin.envVar</code></td><td><code>/admin/env-var</code></td><td><code>EnvVarPage·Parts·Columns</code></td><td><code>web/admin/envvar</code></td><td>새</td></tr><tr class=''><td>268003</td><td>광고배포</td><td><code>ADM0204</code></td><td><code>admin.adDeploy</code></td><td><code>/admin/ad-deploy</code></td><td><code>AdDeployPage·Parts·Columns</code></td><td><code>web/admin/addeploy</code></td><td>새</td></tr><tr class='have'><td>268004</td><td>메뉴관리</td><td><code>ADM0202</code></td><td><code>admin.menuMgt</code></td><td><code>/admin/menu-mgt</code></td><td><code>MenuMgtPage·Parts·Columns</code></td><td><code>web/menumgt (그대로)</code></td><td>있음</td></tr></table>
+<h2>백엔드 생성 파일 경로 (디렉토리 목록)</h2><p>새 화면·팝업만. 이미 있는 7개 화면은 지금 패키지 그대로(<code>web/notice</code> 등 — 표의 '그대로'). 클래스 이름은 다른 화면과 겹치지 않게 화면 이름 접두어(팝업은 <code>…Popup…</code>).</p><pre class='tree'>Backend/nh-atms-api/atms-web/src/main/java/kr/co/nh/atms/web/
+├─ main/
+│  ├─ favorite/                         ← 신규 즐겨찾기
+│  │  ├─ controller/FavoriteController.java
+│  │  ├─ service/FavoriteService.java
+│  │  ├─ mapper/FavoriteMapper.java
+│  │  └─ dto/FavoriteSearchDto.java · FavoriteRow.java
+├─ txn/
+│  ├─ txnslip/                         ← 261000 거래 전표 조회
+│  │  ├─ controller/TxnSlipController.java
+│  │  ├─ service/TxnSlipService.java
+│  │  ├─ mapper/TxnSlipMapper.java
+│  │  └─ dto/TxnSlipSearchDto.java · TxnSlipRow.java
+├─ total/
+│  ├─ cornermgt/                         ← 263000 자동화기기 설치코너 관리
+│  │  ├─ controller/CornerMgtController.java
+│  │  ├─ service/CornerMgtService.java
+│  │  ├─ mapper/CornerMgtMapper.java
+│  │  └─ dto/CornerMgtSearchDto.java · CornerMgtRow.java
+│  ├─ closereserve/                         ← 263001 자동화기기 합계/폐국 예약
+│  │  ├─ controller/CloseReserveController.java
+│  │  ├─ service/CloseReserveService.java
+│  │  ├─ mapper/CloseReserveMapper.java
+│  │  └─ dto/CloseReserveSearchDto.java · CloseReserveRow.java
+│  ├─ alarmsetting/                         ← 263002 알림설정
+│  │  ├─ controller/AlarmSettingController.java
+│  │  ├─ service/AlarmSettingService.java
+│  │  ├─ mapper/AlarmSettingMapper.java
+│  │  └─ dto/AlarmSettingSearchDto.java · AlarmSettingRow.java
+│  ├─ assetstatus/                         ← 263202 자동화기기 자산현황
+│  │  ├─ controller/AssetStatusController.java
+│  │  ├─ service/AssetStatusService.java
+│  │  ├─ mapper/AssetStatusMapper.java
+│  │  └─ dto/AssetStatusSearchDto.java · AssetStatusRow.java
+│  ├─ openclosecheck/                         ← 신규 자동화기기 신설•폐쇄 확인
+│  │  ├─ controller/OpenCloseCheckController.java
+│  │  ├─ service/OpenCloseCheckService.java
+│  │  ├─ mapper/OpenCloseCheckMapper.java
+│  │  └─ dto/OpenCloseCheckSearchDto.java · OpenCloseCheckRow.java
+│  ├─ mcnlocation/                         ← 263204 자동화기기 위치조회
+│  │  ├─ controller/McnLocationController.java
+│  │  ├─ service/McnLocationService.java
+│  │  ├─ mapper/McnLocationMapper.java
+│  │  └─ dto/McnLocationSearchDto.java · McnLocationRow.java
+│  ├─ globalatmlocation/                         ← 263205 글로벌ATM/바이오인증 위치조회
+│  │  ├─ controller/GlobalAtmLocationController.java
+│  │  ├─ service/GlobalAtmLocationService.java
+│  │  ├─ mapper/GlobalAtmLocationMapper.java
+│  │  └─ dto/GlobalAtmLocationSearchDto.java · GlobalAtmLocationRow.java
+│  ├─ stmmedia/                         ← 263207 STM 매체현황 조회
+│  │  ├─ controller/StmMediaController.java
+│  │  ├─ service/StmMediaService.java
+│  │  ├─ mapper/StmMediaMapper.java
+│  │  └─ dto/StmMediaSearchDto.java · StmMediaRow.java
+│  ├─ faultstatus/                         ← 263100 장애 현황
+│  │  ├─ controller/FaultStatusController.java
+│  │  ├─ service/FaultStatusService.java
+│  │  ├─ mapper/FaultStatusMapper.java
+│  │  └─ dto/FaultStatusSearchDto.java · FaultStatusRow.java
+│  ├─ faulthist/                         ← 263101 장애내역 조회
+│  │  ├─ controller/FaultHistController.java
+│  │  ├─ service/FaultHistService.java
+│  │  ├─ mapper/FaultHistMapper.java
+│  │  └─ dto/FaultHistSearchDto.java · FaultHistRow.java
+│  ├─ faultnotice/                         ← 263103 장애통보 현황
+│  │  ├─ controller/FaultNoticeController.java
+│  │  ├─ service/FaultNoticeService.java
+│  │  ├─ mapper/FaultNoticeMapper.java
+│  │  └─ dto/FaultNoticeSearchDto.java · FaultNoticeRow.java
+│  ├─ cashcheck/                         ← 263203 자동화기기 시재확인
+│  │  ├─ controller/CashCheckController.java
+│  │  ├─ service/CashCheckService.java
+│  │  ├─ mapper/CashCheckMapper.java
+│  │  └─ dto/CashCheckSearchDto.java · CashCheckRow.java
+│  ├─ fxcashrequest/                         ← 263209 외화ATM 시재요청 및 확인
+│  │  ├─ controller/FxCashRequestController.java
+│  │  ├─ service/FxCashRequestService.java
+│  │  ├─ mapper/FxCashRequestMapper.java
+│  │  └─ dto/FxCashRequestSearchDto.java · FxCashRequestRow.java
+│  ├─ globalatmstatus/                         ← 263210 글로벌ATM 현황
+│  │  ├─ controller/GlobalAtmStatusController.java
+│  │  ├─ service/GlobalAtmStatusService.java
+│  │  ├─ mapper/GlobalAtmStatusMapper.java
+│  │  └─ dto/GlobalAtmStatusSearchDto.java · GlobalAtmStatusRow.java
+├─ journal/
+│  ├─ journallist/                         ← 264000 저널조회
+│  │  ├─ controller/JournalListController.java
+│  │  ├─ service/JournalListService.java
+│  │  ├─ mapper/JournalListMapper.java
+│  │  └─ dto/JournalListSearchDto.java · JournalListRow.java
+│  ├─ openstatus/                         ← 264001 저널업무 개시현황
+│  │  ├─ controller/OpenStatusController.java
+│  │  ├─ service/OpenStatusService.java
+│  │  ├─ mapper/OpenStatusMapper.java
+│  │  └─ dto/OpenStatusSearchDto.java · OpenStatusRow.java
+│  ├─ imageauth/                         ← 264002 저널이미지 권한 관리
+│  │  ├─ controller/ImageAuthController.java
+│  │  ├─ service/ImageAuthService.java
+│  │  ├─ mapper/ImageAuthMapper.java
+│  │  └─ dto/ImageAuthSearchDto.java · ImageAuthRow.java
+│  ├─ imageviewlog/                         ← 264003 저널이미지 열람 기록 관리
+│  │  ├─ controller/ImageViewLogController.java
+│  │  ├─ service/ImageViewLogService.java
+│  │  ├─ mapper/ImageViewLogMapper.java
+│  │  └─ dto/ImageViewLogSearchDto.java · ImageViewLogRow.java
+│  ├─ secondpurge/                         ← 264020 저널 2차 파기 조회
+│  │  ├─ controller/SecondPurgeController.java
+│  │  ├─ service/SecondPurgeService.java
+│  │  ├─ mapper/SecondPurgeMapper.java
+│  │  └─ dto/SecondPurgeSearchDto.java · SecondPurgeRow.java
+│  ├─ opconfig/                         ← 264101 운영환경 설정
+│  │  ├─ controller/OpConfigController.java
+│  │  ├─ service/OpConfigService.java
+│  │  ├─ mapper/OpConfigMapper.java
+│  │  └─ dto/OpConfigSearchDto.java · OpConfigRow.java
+│  ├─ typesummary/                         ← 264104 저널처리 유형별 집계
+│  │  ├─ controller/TypeSummaryController.java
+│  │  ├─ service/TypeSummaryService.java
+│  │  ├─ mapper/TypeSummaryMapper.java
+│  │  └─ dto/TypeSummarySearchDto.java · TypeSummaryRow.java
+│  ├─ opstatus/                         ← 264105 저널 운영현황
+│  │  ├─ controller/OpStatusController.java
+│  │  ├─ service/OpStatusService.java
+│  │  ├─ mapper/OpStatusMapper.java
+│  │  └─ dto/OpStatusSearchDto.java · OpStatusRow.java
+│  ├─ periodcount/                         ← 264200 저널처리 일/월별 건수
+│  │  ├─ controller/PeriodCountController.java
+│  │  ├─ service/PeriodCountService.java
+│  │  ├─ mapper/PeriodCountMapper.java
+│  │  └─ dto/PeriodCountSearchDto.java · PeriodCountRow.java
+│  ├─ moderate/                         ← 264202 운영모드 운영률
+│  │  ├─ controller/ModeRateController.java
+│  │  ├─ service/ModeRateService.java
+│  │  ├─ mapper/ModeRateMapper.java
+│  │  └─ dto/ModeRateSearchDto.java · ModeRateRow.java
+├─ stat/
+│  ├─ promomgt/                         ← 265102 자동화기기 홍보관리
+│  │  ├─ controller/PromoMgtController.java
+│  │  ├─ service/PromoMgtService.java
+│  │  ├─ mapper/PromoMgtMapper.java
+│  │  └─ dto/PromoMgtSearchDto.java · PromoMgtRow.java
+│  ├─ nationopstatus/                         ← 265130 자동화기기 전국운영현황
+│  │  ├─ controller/NationOpStatusController.java
+│  │  ├─ service/NationOpStatusService.java
+│  │  ├─ mapper/NationOpStatusMapper.java
+│  │  └─ dto/NationOpStatusSearchDto.java · NationOpStatusRow.java
+│  ├─ oprate/                         ← 265160 자동화기기 가동률
+│  │  ├─ controller/OpRateController.java
+│  │  ├─ service/OpRateService.java
+│  │  ├─ mapper/OpRateMapper.java
+│  │  └─ dto/OpRateSearchDto.java · OpRateRow.java
+│  ├─ lowoprate/                         ← 265161 자동화기기 가동률 저하점
+│  │  ├─ controller/LowOpRateController.java
+│  │  ├─ service/LowOpRateService.java
+│  │  ├─ mapper/LowOpRateMapper.java
+│  │  └─ dto/LowOpRateSearchDto.java · LowOpRateRow.java
+│  ├─ holidayoprate/                         ← 265162 자동화기기 휴일 가동률
+│  │  ├─ controller/HolidayOpRateController.java
+│  │  ├─ service/HolidayOpRateService.java
+│  │  ├─ mapper/HolidayOpRateMapper.java
+│  │  └─ dto/HolidayOpRateSearchDto.java · HolidayOpRateRow.java
+│  ├─ outsourcemcnstat/                         ← 265500 일괄용역기기 정보 및 통계
+│  │  ├─ controller/OutsourceMcnStatController.java
+│  │  ├─ service/OutsourceMcnStatService.java
+│  │  ├─ mapper/OutsourceMcnStatMapper.java
+│  │  └─ dto/OutsourceMcnStatSearchDto.java · OutsourceMcnStatRow.java
+│  ├─ cashusage/                         ← 265555 현금사용량 집계
+│  │  ├─ controller/CashUsageController.java
+│  │  ├─ service/CashUsageService.java
+│  │  ├─ mapper/CashUsageMapper.java
+│  │  └─ dto/CashUsageSearchDto.java · CashUsageRow.java
+├─ outsource/
+│  ├─ mcnstate/                         ← 266000 기기상태 조회
+│  │  ├─ controller/McnStateController.java
+│  │  ├─ service/McnStateService.java
+│  │  ├─ mapper/McnStateMapper.java
+│  │  └─ dto/McnStateSearchDto.java · McnStateRow.java
+│  ├─ mcnstatehist/                         ← 266001 기기상태이력 조회
+│  │  ├─ controller/McnStateHistController.java
+│  │  ├─ service/McnStateHistService.java
+│  │  ├─ mapper/McnStateHistMapper.java
+│  │  └─ dto/McnStateHistSearchDto.java · McnStateHistRow.java
+│  ├─ opentxnstatus/                         ← 266003 개국및거래현황 조회
+│  │  ├─ controller/OpenTxnStatusController.java
+│  │  ├─ service/OpenTxnStatusService.java
+│  │  ├─ mapper/OpenTxnStatusMapper.java
+│  │  └─ dto/OpenTxnStatusSearchDto.java · OpenTxnStatusRow.java
+│  ├─ dispatchstatus/                         ← 266002 업체 출동 현황조회
+│  │  ├─ controller/DispatchStatusController.java
+│  │  ├─ service/DispatchStatusService.java
+│  │  ├─ mapper/DispatchStatusMapper.java
+│  │  └─ dto/DispatchStatusSearchDto.java · DispatchStatusRow.java
+│  ├─ seconddispatch/                         ← 266004 2차출동 현황
+│  │  ├─ controller/SecondDispatchController.java
+│  │  ├─ service/SecondDispatchService.java
+│  │  ├─ mapper/SecondDispatchMapper.java
+│  │  └─ dto/SecondDispatchSearchDto.java · SecondDispatchRow.java
+│  ├─ cashinquiry/                         ← 266100 시재조회
+│  │  ├─ controller/CashInquiryController.java
+│  │  ├─ service/CashInquiryService.java
+│  │  ├─ mapper/CashInquiryMapper.java
+│  │  └─ dto/CashInquirySearchDto.java · CashInquiryRow.java
+│  ├─ closinghist/                         ← 266101 마감내역 조회
+│  │  ├─ controller/ClosingHistController.java
+│  │  ├─ service/ClosingHistService.java
+│  │  ├─ mapper/ClosingHistMapper.java
+│  │  └─ dto/ClosingHistSearchDto.java · ClosingHistRow.java
+│  ├─ unprocessed/                         ← 266102 미처리내역 조회
+│  │  ├─ controller/UnprocessedController.java
+│  │  ├─ service/UnprocessedService.java
+│  │  ├─ mapper/UnprocessedMapper.java
+│  │  └─ dto/UnprocessedSearchDto.java · UnprocessedRow.java
+│  ├─ closingrecon/                         ← 266103 용역마감대사
+│  │  ├─ controller/ClosingReconController.java
+│  │  ├─ service/ClosingReconService.java
+│  │  ├─ mapper/ClosingReconMapper.java
+│  │  └─ dto/ClosingReconSearchDto.java · ClosingReconRow.java
+│  ├─ fundrecon/                         ← 266104 운영자금대사
+│  │  ├─ controller/FundReconController.java
+│  │  ├─ service/FundReconService.java
+│  │  ├─ mapper/FundReconMapper.java
+│  │  └─ dto/FundReconSearchDto.java · FundReconRow.java
+│  ├─ regulartransport/                         ← 266105 정규현송계획내역 조회
+│  │  ├─ controller/RegularTransportController.java
+│  │  ├─ service/RegularTransportService.java
+│  │  ├─ mapper/RegularTransportMapper.java
+│  │  └─ dto/RegularTransportSearchDto.java · RegularTransportRow.java
+│  ├─ extratransport/                         ← 266106 추가현송내역 조회
+│  │  ├─ controller/ExtraTransportController.java
+│  │  ├─ service/ExtraTransportService.java
+│  │  ├─ mapper/ExtraTransportMapper.java
+│  │  └─ dto/ExtraTransportSearchDto.java · ExtraTransportRow.java
+│  ├─ refunddetail/                         ← 266107 반환금액상세조회
+│  │  ├─ controller/RefundDetailController.java
+│  │  ├─ service/RefundDetailService.java
+│  │  ├─ mapper/RefundDetailMapper.java
+│  │  └─ dto/RefundDetailSearchDto.java · RefundDetailRow.java
+│  ├─ slagrade/                         ← 266200 용역업체SLA등급조회
+│  │  ├─ controller/SlaGradeController.java
+│  │  ├─ service/SlaGradeService.java
+│  │  ├─ mapper/SlaGradeMapper.java
+│  │  └─ dto/SlaGradeSearchDto.java · SlaGradeRow.java
+│  ├─ cornerslascore/                         ← 266202 코너별SLA평가점수조회
+│  │  ├─ controller/CornerSlaScoreController.java
+│  │  ├─ service/CornerSlaScoreService.java
+│  │  ├─ mapper/CornerSlaScoreMapper.java
+│  │  └─ dto/CornerSlaScoreSearchDto.java · CornerSlaScoreRow.java
+│  ├─ mcnopratehist/                         ← 266203 기기별가동율이력조회
+│  │  ├─ controller/McnOpRateHistController.java
+│  │  ├─ service/McnOpRateHistService.java
+│  │  ├─ mapper/McnOpRateHistMapper.java
+│  │  └─ dto/McnOpRateHistSearchDto.java · McnOpRateHistRow.java
+│  ├─ slaexplain/                         ← 신규 SLA 소명 자료 자동화
+│  │  ├─ controller/SlaExplainController.java
+│  │  ├─ service/SlaExplainService.java
+│  │  ├─ mapper/SlaExplainMapper.java
+│  │  └─ dto/SlaExplainSearchDto.java · SlaExplainRow.java
+│  ├─ mcnfaulthist/                         ← 266204 기기별장애이력조회
+│  │  ├─ controller/McnFaultHistController.java
+│  │  ├─ service/McnFaultHistService.java
+│  │  ├─ mapper/McnFaultHistMapper.java
+│  │  └─ dto/McnFaultHistSearchDto.java · McnFaultHistRow.java
+│  ├─ cornerenveval/                         ← 266205 용역업체별코너환경평가관리
+│  │  ├─ controller/CornerEnvEvalController.java
+│  │  ├─ service/CornerEnvEvalService.java
+│  │  ├─ mapper/CornerEnvEvalMapper.java
+│  │  └─ dto/CornerEnvEvalSearchDto.java · CornerEnvEvalRow.java
+│  ├─ cseval/                         ← 266206 용역업체별C/S평가관리
+│  │  ├─ controller/CsEvalController.java
+│  │  ├─ service/CsEvalService.java
+│  │  ├─ mapper/CsEvalMapper.java
+│  │  └─ dto/CsEvalSearchDto.java · CsEvalRow.java
+│  ├─ cshist/                         ← 266207 용역업체별C/S이력관리
+│  │  ├─ controller/CsHistController.java
+│  │  ├─ service/CsHistService.java
+│  │  ├─ mapper/CsHistMapper.java
+│  │  └─ dto/CsHistSearchDto.java · CsHistRow.java
+│  ├─ evalstd/                         ← 266208 평가기준관리
+│  │  ├─ controller/EvalStdController.java
+│  │  ├─ service/EvalStdService.java
+│  │  ├─ mapper/EvalStdMapper.java
+│  │  └─ dto/EvalStdSearchDto.java · EvalStdRow.java
+│  ├─ pnigrade/                         ← 266209 P&amp;I등급관리
+│  │  ├─ controller/PniGradeController.java
+│  │  ├─ service/PniGradeService.java
+│  │  ├─ mapper/PniGradeMapper.java
+│  │  └─ dto/PniGradeSearchDto.java · PniGradeRow.java
+│  ├─ downreason/                         ← 266210 미가동사유관리
+│  │  ├─ controller/DownReasonController.java
+│  │  ├─ service/DownReasonService.java
+│  │  ├─ mapper/DownReasonMapper.java
+│  │  └─ dto/DownReasonSearchDto.java · DownReasonRow.java
+│  ├─ feestd/                         ← 266211 용역료기준관리
+│  │  ├─ controller/FeeStdController.java
+│  │  ├─ service/FeeStdService.java
+│  │  ├─ mapper/FeeStdMapper.java
+│  │  └─ dto/FeeStdSearchDto.java · FeeStdRow.java
+│  ├─ feecalc/                         ← 266212 용역료 산정
+│  │  ├─ controller/FeeCalcController.java
+│  │  ├─ service/FeeCalcService.java
+│  │  ├─ mapper/FeeCalcMapper.java
+│  │  └─ dto/FeeCalcSearchDto.java · FeeCalcRow.java
+│  ├─ downhist/                         ← 266213 미가동이력조회
+│  │  ├─ controller/DownHistController.java
+│  │  ├─ service/DownHistService.java
+│  │  ├─ mapper/DownHistMapper.java
+│  │  └─ dto/DownHistSearchDto.java · DownHistRow.java
+│  ├─ vendstaff/                         ← 266300 용역업체직원조회
+│  │  ├─ controller/VendStaffController.java
+│  │  ├─ service/VendStaffService.java
+│  │  ├─ mapper/VendStaffMapper.java
+│  │  └─ dto/VendStaffSearchDto.java · VendStaffRow.java
+│  ├─ msghist/                         ← 266301 업체간 전문 송수신 이력
+│  │  ├─ controller/MsgHistController.java
+│  │  ├─ service/MsgHistService.java
+│  │  ├─ mapper/MsgHistMapper.java
+│  │  └─ dto/MsgHistSearchDto.java · MsgHistRow.java
+│  ├─ mcncornermgt/                         ← 266302 자동화기기·설치코너 관리
+│  │  ├─ controller/McnCornerMgtController.java
+│  │  ├─ service/McnCornerMgtService.java
+│  │  ├─ mapper/McnCornerMgtMapper.java
+│  │  └─ dto/McnCornerMgtSearchDto.java · McnCornerMgtRow.java
+│  ├─ vendmgt/                         ← 266303 용역업체등록관리
+│  │  ├─ controller/VendMgtController.java
+│  │  ├─ service/VendMgtService.java
+│  │  ├─ mapper/VendMgtMapper.java
+│  │  └─ dto/VendMgtSearchDto.java · VendMgtRow.java
+│  ├─ itcostcalc/                         ← 266304 전산비용 청구액 산정
+│  │  ├─ controller/ItCostCalcController.java
+│  │  ├─ service/ItCostCalcService.java
+│  │  ├─ mapper/ItCostCalcMapper.java
+│  │  └─ dto/ItCostCalcSearchDto.java · ItCostCalcRow.java
+├─ admin/
+│  ├─ remotecmd/                         ← 267205 기기원격지시(매체배포)
+│  │  ├─ controller/RemoteCmdController.java
+│  │  ├─ service/RemoteCmdService.java
+│  │  ├─ mapper/RemoteCmdMapper.java
+│  │  └─ dto/RemoteCmdSearchDto.java · RemoteCmdRow.java
+│  ├─ versionlist/                         ← 267206 자동화기기 버전리스트
+│  │  ├─ controller/VersionListController.java
+│  │  ├─ service/VersionListService.java
+│  │  ├─ mapper/VersionListMapper.java
+│  │  └─ dto/VersionListSearchDto.java · VersionListRow.java
+│  ├─ vendcodemgt/                         ← 267208 자동화기기 업체 코드관리
+│  │  ├─ controller/VendCodeMgtController.java
+│  │  ├─ service/VendCodeMgtService.java
+│  │  ├─ mapper/VendCodeMgtMapper.java
+│  │  └─ dto/VendCodeMgtSearchDto.java · VendCodeMgtRow.java
+│  ├─ envvar/                         ← 268002 환경변수관리
+│  │  ├─ controller/EnvVarController.java
+│  │  ├─ service/EnvVarService.java
+│  │  ├─ mapper/EnvVarMapper.java
+│  │  └─ dto/EnvVarSearchDto.java · EnvVarRow.java
+│  ├─ addeploy/                         ← 268003 광고배포
+│  │  ├─ controller/AdDeployController.java
+│  │  ├─ service/AdDeployService.java
+│  │  ├─ mapper/AdDeployMapper.java
+│  │  └─ dto/AdDeploySearchDto.java · AdDeployRow.java
+└─ popup/
+   ├─ remotehist/                         ← 268004* 원격이력조회 (번호가 메뉴관리와 겹침 → 번호 없이)
+   │  ├─ controller/RemoteHistPopupController.java (API 없음)
+   │  ├─ service/RemoteHistPopupService.java
+   │  ├─ mapper/RemoteHistPopupMapper.java
+   │  └─ dto/RemoteHistPopupRow.java
+   ├─ cornerinfo/                         ← 269300 코너정보관리(경비업체 및 일괄용역업체 관리)
+   │  ├─ controller/CornerInfoPopupController.java (API 없음)
+   │  ├─ service/CornerInfoPopupService.java
+   │  ├─ mapper/CornerInfoPopupMapper.java
+   │  └─ dto/CornerInfoPopupRow.java
+   ├─ tempmcnreg/                         ← 269301 자동화기기 한시적 등록
+   │  ├─ controller/TempMcnRegPopupController.java (API 없음)
+   │  ├─ service/TempMcnRegPopupService.java
+   │  ├─ mapper/TempMcnRegPopupMapper.java
+   │  └─ dto/TempMcnRegPopupRow.java
+   ├─ mcndetail/                         ← 269302 자동화기기 정보
+   │  ├─ controller/McnDetailPopupController.java (API 없음)
+   │  ├─ service/McnDetailPopupService.java
+   │  ├─ mapper/McnDetailPopupMapper.java
+   │  └─ dto/McnDetailPopupRow.java
+   ├─ emergencyapproval/                         ← 269303 긴급승인
+   │  ├─ controller/EmergencyApprovalPopupController.java (API 없음)
+   │  ├─ service/EmergencyApprovalPopupService.java
+   │  ├─ mapper/EmergencyApprovalPopupMapper.java
+   │  └─ dto/EmergencyApprovalPopupRow.java
+   ├─ cornerlocedit/                         ← 269304 코너위치정보 수정
+   │  ├─ controller/CornerLocEditPopupController.java (API 없음)
+   │  ├─ service/CornerLocEditPopupService.java
+   │  ├─ mapper/CornerLocEditPopupMapper.java
+   │  └─ dto/CornerLocEditPopupRow.java
+   ├─ faultnoticedetail/                         ← 269311 장애내역 통보현황 상세
+   │  ├─ controller/FaultNoticeDetailPopupController.java (API 없음)
+   │  ├─ service/FaultNoticeDetailPopupService.java
+   │  ├─ mapper/FaultNoticeDetailPopupMapper.java
+   │  └─ dto/FaultNoticeDetailPopupRow.java
+   ├─ opstatusdetail/                         ← 269322 자동화기기 운영현황(자원정보) 상세조회
+   │  ├─ controller/OpStatusDetailPopupController.java (API 없음)
+   │  ├─ service/OpStatusDetailPopupService.java
+   │  ├─ mapper/OpStatusDetailPopupMapper.java
+   │  └─ dto/OpStatusDetailPopupRow.java
+   ├─ slipimage/                         ← 269400 명세표 및 이미지
+   │  ├─ controller/SlipImagePopupController.java (API 없음)
+   │  ├─ service/SlipImagePopupService.java
+   │  ├─ mapper/SlipImagePopupMapper.java
+   │  └─ dto/SlipImagePopupRow.java
+   ├─ arrivaltimeedit/                         ← 269601 도착시간수정
+   │  ├─ controller/ArrivalTimeEditPopupController.java (API 없음)
+   │  ├─ service/ArrivalTimeEditPopupService.java
+   │  ├─ mapper/ArrivalTimeEditPopupMapper.java
+   │  └─ dto/ArrivalTimeEditPopupRow.java
+   ├─ txnjournal/                         ← 261000* 거래저널조회 (번호가 거래 전표 조회와 같음)
+   │  ├─ controller/TxnJournalPopupController.java (API 없음)
+   │  ├─ service/TxnJournalPopupService.java
+   │  ├─ mapper/TxnJournalPopupMapper.java
+   │  └─ dto/TxnJournalPopupRow.java
+   ├─ authgrant/                         ← 267100* 시스템 사용권한부여 (번호가 권한관리와 같음)
+   │  ├─ controller/AuthGrantPopupController.java (API 없음)
+   │  ├─ service/AuthGrantPopupService.java
+   │  ├─ mapper/AuthGrantPopupMapper.java
+   │  └─ dto/AuthGrantPopupRow.java
+   ├─ outsourcecornerinfo/                         ← 269630 코너정보관리(경비업체 및 일괄용역업체 관리) — 2번째
+   │  ├─ controller/OutsourceCornerInfoPopupController.java (API 없음)
+   │  ├─ service/OutsourceCornerInfoPopupService.java
+   │  ├─ mapper/OutsourceCornerInfoPopupMapper.java
+   │  └─ dto/OutsourceCornerInfoPopupRow.java
+   ├─ outsourcetempmcnreg/                         ← 269631 자동화기기 한시적 등록 — 2번째
+   │  ├─ controller/OutsourceTempMcnRegPopupController.java (API 없음)
+   │  ├─ service/OutsourceTempMcnRegPopupService.java
+   │  ├─ mapper/OutsourceTempMcnRegPopupMapper.java
+   │  └─ dto/OutsourceTempMcnRegPopupRow.java
+   ├─ outsourcemcndetail/                         ← 269632 자동화기기 정보 — 2번째
+   │  ├─ controller/OutsourceMcnDetailPopupController.java (API 없음)
+   │  ├─ service/OutsourceMcnDetailPopupService.java
+   │  ├─ mapper/OutsourceMcnDetailPopupMapper.java
+   │  └─ dto/OutsourceMcnDetailPopupRow.java
+   ├─ outsourceemergencyapproval/                         ← 269633 긴급승인 — 2번째
+   │  ├─ controller/OutsourceEmergencyApprovalPopupController.java (API 없음)
+   │  ├─ service/OutsourceEmergencyApprovalPopupService.java
+   │  ├─ mapper/OutsourceEmergencyApprovalPopupMapper.java
+   │  └─ dto/OutsourceEmergencyApprovalPopupRow.java
+   ├─ outsourcecornerlocedit/                         ← 269634 코너위치정보 수정 — 2번째
+   │  ├─ controller/OutsourceCornerLocEditPopupController.java (API 없음)
+   │  ├─ service/OutsourceCornerLocEditPopupService.java
+   │  ├─ mapper/OutsourceCornerLocEditPopupMapper.java
+   │  └─ dto/OutsourceCornerLocEditPopupRow.java
+
+Backend/nh-atms-api/atms-web/src/main/resources/mapper/
+├─ main/  FavoriteMapper.xml
+├─ txn/  TxnSlipMapper.xml
+├─ total/  CornerMgtMapper.xml · CloseReserveMapper.xml · AlarmSettingMapper.xml · AssetStatusMapper.xml · OpenCloseCheckMapper.xml · McnLocationMapper.xml · GlobalAtmLocationMapper.xml · StmMediaMapper.xml · FaultStatusMapper.xml · FaultHistMapper.xml · FaultNoticeMapper.xml · CashCheckMapper.xml · FxCashRequestMapper.xml · GlobalAtmStatusMapper.xml
+├─ journal/  JournalListMapper.xml · OpenStatusMapper.xml · ImageAuthMapper.xml · ImageViewLogMapper.xml · SecondPurgeMapper.xml · OpConfigMapper.xml · TypeSummaryMapper.xml · OpStatusMapper.xml · PeriodCountMapper.xml · ModeRateMapper.xml
+├─ stat/  PromoMgtMapper.xml · NationOpStatusMapper.xml · OpRateMapper.xml · LowOpRateMapper.xml · HolidayOpRateMapper.xml · OutsourceMcnStatMapper.xml · CashUsageMapper.xml
+├─ outsource/  McnStateMapper.xml · McnStateHistMapper.xml · OpenTxnStatusMapper.xml · DispatchStatusMapper.xml · SecondDispatchMapper.xml · CashInquiryMapper.xml · ClosingHistMapper.xml · UnprocessedMapper.xml · ClosingReconMapper.xml · FundReconMapper.xml · RegularTransportMapper.xml · ExtraTransportMapper.xml · RefundDetailMapper.xml · SlaGradeMapper.xml · CornerSlaScoreMapper.xml · McnOpRateHistMapper.xml · SlaExplainMapper.xml · McnFaultHistMapper.xml · CornerEnvEvalMapper.xml · CsEvalMapper.xml · CsHistMapper.xml · EvalStdMapper.xml · PniGradeMapper.xml · DownReasonMapper.xml · FeeStdMapper.xml · FeeCalcMapper.xml · DownHistMapper.xml · VendStaffMapper.xml · MsgHistMapper.xml · McnCornerMgtMapper.xml · VendMgtMapper.xml · ItCostCalcMapper.xml
+├─ admin/  RemoteCmdMapper.xml · VersionListMapper.xml · VendCodeMgtMapper.xml · EnvVarMapper.xml · AdDeployMapper.xml
+└─ popup/  RemoteHistPopupMapper.xml · CornerInfoPopupMapper.xml · TempMcnRegPopupMapper.xml · McnDetailPopupMapper.xml · EmergencyApprovalPopupMapper.xml · CornerLocEditPopupMapper.xml · FaultNoticeDetailPopupMapper.xml · OpStatusDetailPopupMapper.xml · SlipImagePopupMapper.xml · ArrivalTimeEditPopupMapper.xml · TxnJournalPopupMapper.xml · AuthGrantPopupMapper.xml · OutsourceCornerInfoPopupMapper.xml · OutsourceTempMcnRegPopupMapper.xml · OutsourceMcnDetailPopupMapper.xml · OutsourceEmergencyApprovalPopupMapper.xml · OutsourceCornerLocEditPopupMapper.xml</pre><h2>팝업 (메뉴 없음)</h2><table><tr><th>번호</th><th>팝업명</th><th>화면키</th><th>프론트 파일</th><th>백엔드 패키지</th><th>상태</th></tr><tr class=''><td>268004*</td><td>원격이력조회 (번호가 메뉴관리와 겹침 → 번호 없이)</td><td><code>popup.remoteHist</code></td><td><code>popup/RemoteHistModal.tsx</code></td><td><code>web/popup/remotehist</code></td><td>새</td></tr><tr class=''><td>269300</td><td>코너정보관리(경비업체 및 일괄용역업체 관리)</td><td><code>popup.cornerInfo</code></td><td><code>popup/CornerInfoModal.tsx</code></td><td><code>web/popup/cornerinfo</code></td><td>새</td></tr><tr class=''><td>269301</td><td>자동화기기 한시적 등록</td><td><code>popup.tempMcnReg</code></td><td><code>popup/TempMcnRegModal.tsx</code></td><td><code>web/popup/tempmcnreg</code></td><td>새</td></tr><tr class=''><td>269302</td><td>자동화기기 정보</td><td><code>popup.mcnDetail</code></td><td><code>popup/McnDetailModal.tsx</code></td><td><code>web/popup/mcndetail</code></td><td>새</td></tr><tr class=''><td>269303</td><td>긴급승인</td><td><code>popup.emergencyApproval</code></td><td><code>popup/EmergencyApprovalModal.tsx</code></td><td><code>web/popup/emergencyapproval</code></td><td>새</td></tr><tr class=''><td>269304</td><td>코너위치정보 수정</td><td><code>popup.cornerLocEdit</code></td><td><code>popup/CornerLocEditModal.tsx</code></td><td><code>web/popup/cornerlocedit</code></td><td>새</td></tr><tr class=''><td>269311</td><td>장애내역 통보현황 상세</td><td><code>popup.faultNoticeDetail</code></td><td><code>popup/FaultNoticeDetailModal.tsx</code></td><td><code>web/popup/faultnoticedetail</code></td><td>새</td></tr><tr class=''><td>269322</td><td>자동화기기 운영현황(자원정보) 상세조회</td><td><code>popup.opStatusDetail</code></td><td><code>popup/OpStatusDetailModal.tsx</code></td><td><code>web/popup/opstatusdetail</code></td><td>새</td></tr><tr class=''><td>269400</td><td>명세표 및 이미지</td><td><code>popup.slipImage</code></td><td><code>popup/SlipImageModal.tsx</code></td><td><code>web/popup/slipimage</code></td><td>새</td></tr><tr class=''><td>269601</td><td>도착시간수정</td><td><code>popup.arrivalTimeEdit</code></td><td><code>popup/ArrivalTimeEditModal.tsx</code></td><td><code>web/popup/arrivaltimeedit</code></td><td>새</td></tr><tr class=''><td>261000*</td><td>거래저널조회 (번호가 거래 전표 조회와 같음)</td><td><code>popup.txnJournal</code></td><td><code>popup/TxnJournalModal.tsx</code></td><td><code>web/popup/txnjournal</code></td><td>새</td></tr><tr class=''><td>267100*</td><td>시스템 사용권한부여 (번호가 권한관리와 같음)</td><td><code>popup.authGrant</code></td><td><code>popup/AuthGrantModal.tsx</code></td><td><code>web/popup/authgrant</code></td><td>새</td></tr><tr class=''><td>269630</td><td>코너정보관리(경비업체 및 일괄용역업체 관리) — 2번째</td><td><code>popup.outsourceCornerInfo</code></td><td><code>popup/OutsourceCornerInfoModal.tsx</code></td><td><code>web/popup/outsourcecornerinfo</code></td><td>새</td></tr><tr class=''><td>269631</td><td>자동화기기 한시적 등록 — 2번째</td><td><code>popup.outsourceTempMcnReg</code></td><td><code>popup/OutsourceTempMcnRegModal.tsx</code></td><td><code>web/popup/outsourcetempmcnreg</code></td><td>새</td></tr><tr class=''><td>269632</td><td>자동화기기 정보 — 2번째</td><td><code>popup.outsourceMcnDetail</code></td><td><code>popup/OutsourceMcnDetailModal.tsx</code></td><td><code>web/popup/outsourcemcndetail</code></td><td>새</td></tr><tr class=''><td>269633</td><td>긴급승인 — 2번째</td><td><code>popup.outsourceEmergencyApproval</code></td><td><code>popup/OutsourceEmergencyApprovalModal.tsx</code></td><td><code>web/popup/outsourceemergencyapproval</code></td><td>새</td></tr><tr class=''><td>269634</td><td>코너위치정보 수정 — 2번째</td><td><code>popup.outsourceCornerLocEdit</code></td><td><code>popup/OutsourceCornerLocEditModal.tsx</code></td><td><code>web/popup/outsourcecornerlocedit</code></td><td>새</td></tr><tr class='have'><td>269701</td><td>시스템 사용권한부여 상세</td><td><code>popup.authUserEdit</code></td><td><code>popup/AuthUserEditModal.tsx</code></td><td><code>(그대로)</code></td><td>있음</td></tr></table>
+</div></body></html>
