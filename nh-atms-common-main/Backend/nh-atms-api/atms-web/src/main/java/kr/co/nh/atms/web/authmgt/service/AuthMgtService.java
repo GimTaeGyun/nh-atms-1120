@@ -48,7 +48,7 @@ import java.util.Set;
  *   <li>메뉴 권한(TB_SCR_AUTH_MENU): 권한코드 1개 × 메뉴 전체 표를 직접 편집 → 일괄 저장(기기모델코드 견본 모양).
  *       updated = 행이 있으면 고침(UPD), 없으면 넣음(REG) — 들어온 종류만 {@link MenuAuthService#check}.
  *       행 삭제는 없다(2026-11-11 사용자 결정): 사용 해제 = USE_YN 'N' 으로 고침. 행이 없는 메뉴는 화면에 모두 미체크(사용 'N')로 보인다</li>
- *   <li>쓰기가 끝나면 {@link CurrentUserLoader#evictAll()} — 고정 사용자 자신의 권한을 바꿨을 때 1분 캐시를 기다리지 않게</li>
+ *   <li>쓰기가 끝나면 {@link CurrentUserLoader#evictAll()} — 로그인 사용자 자신의 권한을 바꿨을 때 1분 캐시를 기다리지 않게</li>
  * </ul>
  * 오류: 입력 400 VAL_001(필드명)·VAL_003(사무소 형식), 인사정보 없음 400 E404, 없음 404 ATH_001·ATH_003, 중복 400 ATH_002,
  * 부서 없음 400 ATH_004, 부서의 사무소코드 없음 400 ATH_005, 사람의 소속 부서 없음 400 ATH_006.
@@ -104,7 +104,7 @@ public class AuthMgtService {
     /**
      * 등록 — 키는 서버가 TB_OFC_RAW 로 채운다(본문의 부서·사무소는 부서권한의 부서코드만 쓴다).
      * 부서권한(perNo '1'): 부서 없음 ATH_004, 부서의 ONLINE_CODE 없음 ATH_005.
-     * 개인권한: 인사정보 없음 E404, 소속 부서 없음 ATH_006. 같은 키가 있으면 400 ATH_002. 등록일시 = 지금, 등록자 = 고정 사용자
+     * 개인권한: 인사정보 없음 E404, 소속 부서 없음 ATH_006. 같은 키가 있으면 400 ATH_002. 등록일시 = 지금, 등록자 = 로그인 사용자
      */
     @Transactional
     public AuthUser createUser(AuthUserSave req) {

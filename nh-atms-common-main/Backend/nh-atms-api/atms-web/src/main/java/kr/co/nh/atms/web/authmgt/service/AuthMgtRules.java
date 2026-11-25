@@ -36,7 +36,7 @@ public final class AuthMgtRules {
     /**
      * 승인상태 APV_STS CHAR(2) 허용 값.
      * <p>
-     * <b>잠정 Q-18</b>: 정본에 코드표가 없다. 고정 사용자 채택 규칙(CurrentUserLoader.pickAuth)이 'Y' 를 승인으로 보므로 'Y'(승인)·'N'(미승인) 두 값만 받는다.
+     * <b>잠정 Q-18</b>: 정본에 코드표가 없다. 로그인 사용자 채택 규칙(CurrentUserLoader.pickAuth)이 'Y' 를 승인으로 보므로 'Y'(승인)·'N'(미승인) 두 값만 받는다.
      */
     public static final Set<String> APV_STS_VALUES = Set.of("Y", "N");
 

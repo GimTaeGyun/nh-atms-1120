@@ -78,7 +78,7 @@ const NoMenus = ({ onRetry }: { onRetry: () => void }) => (
 
 /**
  * 사이드 패널: 대메뉴 제목(즐겨찾기 상자는 2026-11-13 헤더로 옮김) → 대메뉴 제목 → 중메뉴(폴더)/소메뉴(화면) 트리 — 전부 DB 메뉴(`/api/web/menu/my`).
- * 홈이면 홈·최근 방문. 메뉴를 못 받았거나 보이는 메뉴가 없으면 안내 + [다시 시도]. 하단은 나(고정 사용자) + 환경설정.
+ * 홈이면 홈·최근 방문. 메뉴를 못 받았거나 보이는 메뉴가 없으면 안내 + [다시 시도]. 하단은 나(로그인 사용자) + 환경설정. 로그아웃 버튼은 헤더(AppHeader)에 있다.
  */
 export const SidePanel = ({ topId, flyout, onOpenSettings, onMouseLeave }: Props) => {
   const menus = useNavStore((s) => s.menus);

@@ -71,6 +71,7 @@
 | 6 | `docs/05_공통모듈_목록.md` | 날짜·콤보·팝업·표·출력 부품 카탈로그(쓰는 예) |
 | - | `docs/09_권한관리_폐쇄망_적용가이드.md` · `docs/92_화면개발가이드_작성법.md` | 화면 개발 가이드(화면마다 제N부, 생성물) · 그 작성법 |
 | - | `docs/93_반입목록.md` (생성물) | **다음 반입에 들어갈 파일·변경점을 모듈별로**(지난 반입 기준 커밋 이후, 최종본 한 번만). 파일을 바꾸면 `tools/carry-in.json` 에 그 파일을 모듈에 넣고 `python3 -I tools/gen_carry_in.py` — `--check` 가 모듈에 빠진 파일을 잡는다. 반입을 마치면 `base` 를 그때 커밋으로 올린다 |
+| - | **Figma `[NH농협은행] ATMS GUI`** (2026-11-12 기록) — https://www.figma.com/design/voJt0DqmYV0WcNdVoju8SH/-NH%EB%86%8D%ED%98%91%EC%9D%80%ED%96%89--ATMS-GUI?node-id=294-955&t=mvJfHzIj0OswJiAA-1 (fileKey `voJt0DqmYV0WcNdVoju8SH`, node `294-955`) | 화면 모양(배치·색·글꼴)을 맞출 때. 폐쇄망 PC 에서는 안 열리므로 인터넷 PC 또는 클라우드 세션의 Figma MCP 로 본다 |
 | - | `docs/90_현업질문_후보.md` | 정본·현업 답이 없는 것 → 질문 후보(번호 `Q-xx`) |
 | - | `agent-briefs/README.md` | 화면을 에이전트에게 나눠 맡길 때 |
 | - | `db/README.md`, `db/ddl/README.md` | DB 확인 순서 (`db/seed` 는 2026-11-11 사용자 결정으로 삭제 — 폐쇄망 개발 DB 에 메뉴·권한 행이 이미 있음) |

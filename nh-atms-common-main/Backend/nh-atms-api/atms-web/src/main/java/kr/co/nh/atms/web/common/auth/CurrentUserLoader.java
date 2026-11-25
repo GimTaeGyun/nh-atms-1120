@@ -51,7 +51,7 @@ public class CurrentUserLoader {
     LoginUser loadFromDb(String perNo) {
         InsaRow insa = mapper.selectInsa(perNo);
         if (insa == null) {
-            log.warn("[고정사용자] TB_INSA 에 개인번호가 없습니다: {}", perNo);
+            log.warn("[로그인사용자] TB_INSA 에 개인번호가 없습니다: {}", perNo);
             return null;
         }
         String now = Dates.now14();

@@ -1,7 +1,7 @@
 /**
  * 환경 변수 단일 진입점.
  * import.meta.env 를 화면 코드에서 직접 읽지 않고 여기서 타입/기본값을 확정한다.
- * [원본] nh-atms `src/config/env.ts` — 로그인·SSO·데모·무조작 로그아웃 키는 뺐다(설계 §5.3, 로그인 없음).
+ * [원본] nh-atms `src/config/env.ts` — 로그인·SSO·데모·무조작 로그아웃 키는 뺐다(로그인은 세션 방식이라 설정 키가 없다).
  */
 /** VITE_ENV_LABEL 이 없을 때(.env 파일 없는 AS-IS 프로젝트에 넣은 경우) 빌드 모드를 .env.* 와 같은 표기로 */
 const MODE_LABEL: Record<string, string> = { production: 'prod', development: 'local' };

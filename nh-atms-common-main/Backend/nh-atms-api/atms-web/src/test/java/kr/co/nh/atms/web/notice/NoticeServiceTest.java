@@ -55,7 +55,7 @@ class NoticeServiceTest {
         login(true);
     }
 
-    /** 고정 사용자 홍길동(사무소 000080). admin=false 면 권한 'T'(관리자 아님) */
+    /** 로그인 사용자 홍길동(사무소 000080). admin=false 면 권한 'T'(관리자 아님) */
     private static void login(boolean admin) {
         LoginUser u = new LoginUser(ME, "홍길동", "000080", "본점", "000080", "000080", "본점", admin ? "A" : "T", admin ? "Y" : "N");
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(u, null, List.of()));
