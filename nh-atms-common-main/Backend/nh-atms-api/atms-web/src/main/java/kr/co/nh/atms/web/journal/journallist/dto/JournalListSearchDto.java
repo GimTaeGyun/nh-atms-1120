@@ -5,7 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * 저널조회 조건 — API 계약 §13 {@code JnalSearch}. 페이지 없음(서버가 합친 전체 목록, 화면이 20건씩 나눠 보임).
+ * 저널조회 조건 — API 계약 §13 {@code JournalListSearch}. 페이지 없음(서버가 합친 전체 목록, 화면이 20건씩 나눠 보임).
  * 서비스(JournalListRules.normalize)가 값을 정리한다. 테이블은 TB_JL_JNAL(+_CHK)만.
  */
 @Getter
